@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#090a13">
+<title>WORD LAB</title>
+<style>
+:root{--h:250;--a:hsl(var(--h) 100% 84%);--b:hsl(calc(var(--h) + 45) 100% 82%);--m:#aab5ca;--l:#ffffff1f;--fs:1}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;color:#fff;font:15px Inter,system-ui,sans-serif;min-height:100dvh;background:radial-gradient(ellipse at 15% 0,hsl(var(--h) 45% 24%),transparent 45%),radial-gradient(ellipse at 90% 30%,hsl(calc(var(--h) + 50) 40% 21%),transparent 40%),#090a13;background-attachment:fixed}
+button,input{font:inherit;color:inherit}button{cursor:pointer;border:0;background:none}
+.app{max-width:640px;margin:auto;padding:calc(18px + env(safe-area-inset-top)) 16px calc(110px + env(safe-area-inset-bottom))}
+.logo{font-size:11px;letter-spacing:4px;color:var(--a);font-weight:800}
+h1{font-size:40px;letter-spacing:-3px;margin:6px 0 16px}h1 i{color:var(--a);font-style:normal}
+.v{display:none}.v.on{display:block;animation:in .4s both}
+.p{padding:18px;border:1px solid var(--l);border-radius:22px;background:linear-gradient(135deg,#ffffff14,#ffffff05);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);box-shadow:0 16px 50px #0004,inset 0 1px #ffffff15;margin-bottom:14px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:2px 0 14px;scrollbar-width:none}.chips::-webkit-scrollbar{display:none}
+.chip,.tg button,.seg button{padding:9px 14px;border-radius:30px;border:1px solid var(--l);background:#ffffff0a;color:#c4cadd;font-size:13px;white-space:nowrap;transition:.25s}
+.chip:active,.tg button:active{transform:scale(.94)}
+.chip.on,.seg button.on{color:#fff;border-color:var(--a);background:linear-gradient(120deg,hsl(var(--h) 100% 80% / .25),hsl(calc(var(--h) + 45) 100% 80% / .2))}
+.sum{font-size:12px;color:var(--m);margin:12px 0 0;text-align:center}.sum b{color:var(--a);font-weight:600;cursor:pointer}
+.step{display:flex;align-items:center;justify-content:center;gap:18px;margin-bottom:14px}
+.step button{width:44px;height:44px;border-radius:50%;border:1px solid var(--l);background:#ffffff10;font-size:22px;transition:.2s}.step button:active{transform:scale(.85)}
+.step strong{min-width:110px;text-align:center;font-size:17px}
+.go{position:relative;width:100%;padding:20px;border-radius:18px;background:linear-gradient(110deg,var(--a),var(--b));color:#101426;font-weight:900;font-size:16px;letter-spacing:2px;overflow:hidden;box-shadow:0 10px 40px hsl(var(--h) 100% 80% / .3);transition:transform .15s}
+.go:active{transform:scale(.97)}.go:before{content:"";position:absolute;top:0;left:-60%;width:40%;height:100%;background:linear-gradient(100deg,transparent,#fff7,transparent);transform:skewX(-20deg);animation:shine 3.5s infinite}
+.go.load{opacity:.7;pointer-events:none}.go.load:after{content:"";display:inline-block;width:14px;height:14px;margin-left:10px;vertical-align:-2px;border:2px solid #1015;border-top-color:#101426;border-radius:50%;animation:rot .7s linear infinite}
+.pb{height:4px;background:#ffffff12;border-radius:9px;overflow:hidden;margin-top:12px;opacity:0;transition:.3s}.pb.on{opacity:1}.pb div{height:100%;width:0;background:linear-gradient(90deg,var(--a),var(--b));transition:width .2s}
+.st{font-size:12px;color:#9caac3;margin-top:10px;text-align:center;min-height:16px}
+#cards{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
+.c{position:relative;min-height:110px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:14px 10px 40px;border:1px solid #ffffff26;border-radius:20px;background:linear-gradient(140deg,#ffffff1a,#ffffff07);box-shadow:inset 0 1px #ffffff20,0 12px 35px #0003;overflow:hidden;cursor:pointer;animation:wi .45s both;transition:border-color .3s,box-shadow .3s}
+.c .w{font-size:calc(clamp(17px,5vw,25px)*var(--fs));font-weight:850;letter-spacing:-1px;overflow-wrap:anywhere}
+.c small{font-size:11px;color:#bdc9e1;margin-top:7px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.c.spin{border-color:hsl(var(--h) 100% 80% / .5)}.c.spin .w{filter:blur(.6px);color:var(--a)}
+[data-anim=reel] .spin .w{animation:slot .14s}[data-anim=flicker] .spin .w{animation:fl .14s}
+.c.done{animation:pop .6s;box-shadow:0 0 40px hsl(var(--h) 100% 80% / .35),inset 0 1px #ffffff30}
+.c.pin{border-color:var(--b)}
+.ac{position:absolute;bottom:4px;left:0;right:0;display:flex;justify-content:center;gap:2px}.ac button{width:38px;height:34px;font-size:16px;opacity:.75;transition:.2s}.ac button:active{transform:scale(1.3)}
+.empty{grid-column:1/-1;text-align:center;padding:40px 10px;color:var(--m);font-size:13px;line-height:1.6}
+.orb{width:84px;height:84px;margin:0 auto 18px;border-radius:50%;background:radial-gradient(circle at 30% 30%,var(--a),var(--b) 50%,transparent 72%);filter:blur(1px);animation:fl2 4s ease-in-out infinite;display:grid;place-items:center;font-size:30px;color:#101426}
+.tools{display:flex;gap:8px;margin-top:12px}.tools button{flex:1;padding:12px;border-radius:13px;background:#ffffff10;border:1px solid var(--l);font-size:13px}
+details{border:1px solid var(--l);border-radius:20px;background:linear-gradient(135deg,#ffffff12,#ffffff05);margin-bottom:12px;overflow:hidden}
+summary{list-style:none;padding:17px 18px;font-weight:700;display:flex;align-items:center;gap:12px;cursor:pointer}summary::-webkit-details-marker{display:none}
+summary em{font-style:normal;width:30px;height:30px;border-radius:10px;display:grid;place-items:center;background:linear-gradient(135deg,hsl(var(--h) 100% 80% / .3),hsl(calc(var(--h) + 45) 100% 80% / .15))}
+summary:after{content:"›";margin-left:auto;font-size:22px;color:var(--m);transition:transform .3s}details[open] summary:after{transform:rotate(90deg)}
+.bd{padding:0 18px 16px;animation:in .35s both}
+.lb{display:block;font-size:12px;color:#b9c5da;margin:16px 0 9px}
+.sr{display:flex;justify-content:space-between;align-items:center;padding:13px 0;border-bottom:1px solid #ffffff10;font-size:14px;gap:12px}.sr:last-child{border:0}.sr small{display:block;color:var(--m);font-size:11px;margin-top:3px}
+.sw{appearance:none;-webkit-appearance:none;width:46px;height:27px;background:#35394b;border-radius:30px;position:relative;flex-shrink:0;transition:.25s;cursor:pointer}
+.sw:before{content:"";position:absolute;width:21px;height:21px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.25s cubic-bezier(.5,1.6,.5,1)}.sw:checked{background:var(--a)}.sw:checked:before{transform:translateX(19px)}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.tg{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}.tg button{border-radius:13px;text-align:center;padding:12px 6px}.tg button.on{color:#fff;border-color:var(--a);background:linear-gradient(120deg,hsl(var(--h) 100% 80% / .25),hsl(calc(var(--h) + 45) 100% 80% / .2))}
+input[type=range]{width:100%;accent-color:var(--a);height:28px}
+.ri{display:flex;justify-content:space-between;color:var(--m);font-size:12px}.ri strong{color:#fff}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fg input{width:100%;padding:12px;border-radius:12px;background:#111a2a;border:1px solid var(--l);outline:0;transition:.2s}.fg input:focus{border-color:var(--a)}.fg span{font-size:11px;color:var(--m);display:block;margin-bottom:6px}
+.sw2 button{width:36px;height:36px;padding:0;border-radius:50%}
+.btn{width:100%;padding:13px;border-radius:13px;background:#ffffff10;border:1px solid var(--l);margin-top:10px;font-size:14px}.btn.red{color:#ff9aa8}
+.hr{display:flex;align-items:center;gap:12px;padding:13px 4px;border-bottom:1px solid #ffffff10;cursor:pointer;animation:in .4s both}.hr b{font-size:16px}.hr small{margin-left:auto;color:var(--m);font-size:11px;text-align:right}
+nav{position:fixed;left:50%;bottom:calc(12px + env(safe-area-inset-bottom));transform:translateX(-50%);width:min(92vw,420px);display:grid;grid-template-columns:repeat(3,1fr);padding:6px;border-radius:26px;border:1px solid #ffffff25;background:#12162acc;backdrop-filter:blur(26px);-webkit-backdrop-filter:blur(26px);box-shadow:0 14px 40px #0008;z-index:20}
+nav button{position:relative;z-index:1;padding:9px 0 7px;font-size:11px;color:var(--m);display:flex;flex-direction:column;align-items:center;gap:2px;transition:.3s}nav button span{font-size:19px;transition:.3s}nav button.on{color:#fff}nav button.on span{transform:translateY(-2px) scale(1.15)}
+nav i{position:absolute;top:6px;bottom:6px;left:6px;width:calc((100% - 12px)/3);border-radius:20px;background:linear-gradient(120deg,hsl(var(--h) 100% 80% / .28),hsl(calc(var(--h) + 45) 100% 80% / .2));border:1px solid hsl(var(--h) 100% 80% / .35);transform:translateX(calc(var(--i)*100%));transition:transform .45s cubic-bezier(.5,1.4,.5,1)}
+#ov{position:fixed;inset:0;z-index:50;background:#0008;backdrop-filter:blur(4px);display:none;align-items:flex-end;justify-content:center}#ov.on{display:flex;animation:fi .25s}
+#sh{width:min(100%,640px);background:#12162a;border:1px solid #ffffff25;border-radius:28px 28px 0 0;padding:14px 20px calc(24px + env(safe-area-inset-bottom));animation:up .4s cubic-bezier(.2,1,.3,1)}
+#sh .gr{width:40px;height:4px;border-radius:4px;background:#ffffff30;margin:0 auto 18px}#sh h3{font-size:34px;letter-spacing:-2px;margin:0 0 8px;overflow-wrap:anywhere}
+#sh p{color:#c4cadd;line-height:1.6;margin:8px 0}.fa{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.fa span{font-size:12px;padding:6px 11px;border-radius:20px;background:#ffffff10}
+.ba{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}.ba button,.ba a{padding:13px;border-radius:13px;background:#ffffff10;border:1px solid var(--l);text-align:center;color:#fff;text-decoration:none;font-size:14px}
+#toast{position:fixed;left:50%;bottom:calc(100px + env(safe-area-inset-bottom));transform:translate(-50%,20px);padding:11px 18px;border-radius:30px;background:#222844;border:1px solid #ffffff25;font-size:13px;opacity:0;pointer-events:none;transition:.35s;z-index:60}#toast.on{opacity:1;transform:translate(-50%,0)}
+@keyframes in{from{opacity:0;transform:translateY(12px)}}@keyframes fi{from{opacity:0}}@keyframes up{from{transform:translateY(100%)}}
+@keyframes wi{from{opacity:0;transform:translateY(16px) scale(.94);filter:blur(5px)}}@keyframes slot{from{transform:translateY(-70%);opacity:0}}@keyframes fl{from{opacity:.2}}
+@keyframes pop{40%{transform:scale(1.06)}}@keyframes shine{0%,60%{left:-60%}100%{left:130%}}@keyframes rot{to{transform:rotate(360deg)}}@keyframes fl2{50%{transform:translateY(-8px) scale(1.06)}}
+@media(max-width:360px){#cards{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){*,:before,:after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<main class="app">
+
+<section class="v on" id="v0">
+ <div class="logo">WORD LAB / GERMAN</div>
+ <h1>Randomizer<i>.</i></h1>
+ <div class="chips" id="pre"></div>
+ <div class="p">
+  <div class="step"><button id="m">−</button><strong id="am"></strong><button id="pl">+</button></div>
+  <button class="go" id="go">✦ ZIEHEN</button>
+  <div class="pb" id="pb"><div></div></div>
+  <div class="st" id="st"></div>
+  <div class="sum" id="sum"></div>
+ </div>
+ <div id="cards" data-anim="reel"></div>
+ <div class="tools" id="tools" style="display:none"><button id="cp">Kopieren</button><button id="sh2">Teilen</button></div>
+</section>
+
+<section class="v" id="v1">
+ <div class="logo">EINSTELLUNGEN</div>
+ <h1>Dein Stil<i>.</i></h1>
+
+ <details open><summary><em>◧</em>Grundlagen</summary><div class="bd">
+  <span class="lb">Wortarten</span>
+  <div class="tg" id="tt">
+   <button data-t="noun">Nomen</button><button data-t="adjective">Adjektive</button><button data-t="verb">Verben</button>
+   <button data-t="adverb">Adverbien</button><button data-t="other">Sonstige</button><button data-t="all">Alle</button>
+  </div>
+  <span class="lb">Anzahl der Wörter</span>
+  <input type="range" min="1" max="30" data-k="amount"><div class="ri"><span>1</span><strong id="amL"></strong><span>30</span></div>
+  <span class="lb">Wortauswahl</span>
+  <div class="seg" data-k="freq"><button data-v="all">Zufällig</button><button data-v="common">Bekannt</button><button data-v="rare">Selten &amp; lang</button></div>
+ </div></details>
+
+ <details><summary><em>⌕</em>Filter</summary><div class="bd">
+  <span class="lb">Mindestlänge</span>
+  <input type="range" min="2" max="30" data-k="min"><div class="ri"><span>2</span><strong id="miL"></strong><span>30</span></div>
+  <span class="lb">Höchstlänge</span>
+  <input type="range" min="2" max="30" data-k="max"><div class="ri"><span>2</span><strong id="maL"></strong><span>30</span></div>
+  <span class="lb">Umlaute &amp; ß</span>
+  <div class="seg" data-k="uml"><button data-v="all">Egal</button><button data-v="with">Mit</button><button data-v="without">Ohne</button></div>
+  <span class="lb">Buchstaben-Muster</span>
+  <div class="fg">
+   <label><span>Beginnt mit</span><input data-k="starts" maxlength="8" autocapitalize="off" spellcheck="false"></label>
+   <label><span>Endet auf</span><input data-k="ends" maxlength="8" autocapitalize="off" spellcheck="false"></label>
+   <label><span>Enthält</span><input data-k="has" maxlength="8" autocapitalize="off" spellcheck="false"></label>
+   <label><span>Ohne Buchstaben</span><input data-k="excl" maxlength="12" autocapitalize="off" spellcheck="false"></label>
+  </div>
+ </div></details>
+
+ <details><summary><em>✎</em>Darstellung</summary><div class="bd">
+  <div class="sr">Bedeutung anzeigen<input class="sw" type="checkbox" data-k="meaning"></div>
+  <div class="sr">Wortart anzeigen<input class="sw" type="checkbox" data-k="showType"></div>
+  <span class="lb">Textgröße</span>
+  <input type="range" min="80" max="140" step="10" data-k="size"><div class="ri"><span>klein</span><strong id="szL"></strong><span>groß</span></div>
+  <span class="lb">Akzentfarbe</span>
+  <div class="seg sw2" data-k="hue">
+   <button data-v="250" style="background:hsl(250 90% 72%)"></button><button data-v="200" style="background:hsl(200 90% 65%)"></button><button data-v="155" style="background:hsl(155 70% 60%)"></button><button data-v="330" style="background:hsl(330 90% 72%)"></button><button data-v="35" style="background:hsl(35 95% 65%)"></button>
+  </div>
+ </div></details>
+
+ <details><summary><em>◎</em>Animation &amp; Feedback</summary><div class="bd">
+  <span class="lb">Zieh-Animation</span>
+  <div class="seg" data-k="anim"><button data-v="reel">Walze</button><button data-v="flicker">Flackern</button><button data-v="none">Sofort</button></div>
+  <span class="lb">Tempo</span>
+  <div class="seg" data-k="speed"><button data-v="0.6">Ruhig</button><button data-v="1">Normal</button><button data-v="1.8">Schnell</button></div>
+  <div class="sr" style="margin-top:8px">Vibration beim Einrasten<input class="sw" type="checkbox" data-k="haptic"></div>
+  <div class="sr"><div>Schütteln zum Ziehen<small>Handy schütteln statt tippen</small></div><input class="sw" type="checkbox" data-k="shake"></div>
+  <div class="sr"><div>Wörter vorlesen<small>Neue Wörter automatisch sprechen</small></div><input class="sw" type="checkbox" data-k="speak"></div>
+ </div></details>
+
+ <details><summary><em>⚙</em>Erweitert</summary><div class="bd">
+  <div class="sr"><div>Keine doppelten Wörter<small>Innerhalb einer Ziehung</small></div><input class="sw" type="checkbox" data-k="unique"></div>
+  <div class="sr"><div>Wiederholungsschutz<small>Keine Wörter aus dem Verlauf</small></div><input class="sw" type="checkbox" data-k="fresh"></div>
+  <div class="sr"><div>Grundform bevorzugen<small>Gebeugte Formen ausblenden</small></div><input class="sw" type="checkbox" data-k="base"></div>
+  <span class="lb">Wortquellen</span>
+  <div class="sr">Spielwörter <small style="display:inline">· Hauptquelle</small><input class="sw" type="checkbox" data-k="srcSpiel"></div>
+  <div class="sr">ENZ <small style="display:inline">· Fallback, ohne Wortart</small><input class="sw" type="checkbox" data-k="srcEnz"></div>
+  <button class="btn" id="cc">Zwischenspeicher löschen</button>
+  <button class="btn red" id="rs">Einstellungen zurücksetzen</button>
+  <p class="st">Quellen: <a style="color:var(--a)" href="https://github.com/marekventur/spielwoerter">Spielwörter</a> · <a style="color:var(--a)" href="https://github.com/enz/german-wordlist">ENZ</a></p>
+ </div></details>
+</section>
+
+<section class="v" id="v2">
+ <div class="logo">VERLAUF</div>
+ <h1>Gesammelt<i>.</i></h1>
+ <div class="chips"><button class="chip on" id="hA">Alle</button><button class="chip" id="hF">♥ Merkliste</button><button class="chip" id="hC">Verlauf leeren</button></div>
+ <div id="hl"></div>
+</section>
+</main>
+
+<nav id="nav"><i></i>
+ <button class="on" data-n="0"><span>✦</span>Ziehen</button>
+ <button data-n="1"><span>☰</span>Einstellungen</button>
+ <button data-n="2"><span>♥</span>Verlauf</button>
+</nav>
+<div id="ov"><div id="sh"></div></div>
+<div id="toast"></div>
+
+<script>
+"use strict";
+const $=id=>document.getElementById(id),QA=s=>[...document.querySelectorAll(s)];
+const ALL=["noun","adjective","verb","adverb","other"];
+const D={types:["noun","adjective","verb"],amount:5,min:2,max:30,starts:"",has:"",ends:"",excl:"",uml:"all",freq:"all",unique:true,fresh:false,base:false,meaning:true,showType:true,anim:"reel",speed:1,haptic:true,shake:false,speak:false,hue:250,size:100,srcSpiel:true,srcEnz:true};
+const SOURCES={
+ spiel:{name:"Spielwörter",url:"https://raw.githubusercontent.com/marekventur/spielwoerter/main/wordlist_accepted.jsonl",format:"jsonl"},
+ enz:{name:"ENZ",url:"https://raw.githubusercontent.com/enz/german-wordlist/main/words",format:"txt"}};
+const TN={noun:"Nomen",adjective:"Adjektiv",verb:"Verb",adverb:"Adverb",other:"Sonstige",unknown:"Wortart unbekannt"};
+const PR={"Alltag":{max:8,freq:"common"},"Kurz":{max:5},"Lang & selten":{min:12,freq:"rare"},"Nur Nomen":{types:["noun"]},"Nur Verben":{types:["verb"]},"Alles":{types:ALL}};
+
+let S,H=[],F=[],cur=[],P=[],db=[],src="",busy=false,gen=0,timers=[],hf=false,lastShake=0;
+const ld=(k,d)=>{try{return (v=>v==null?d:v)(JSON.parse(localStorage.getItem(k)))}catch{return d}};
+const sv=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}};
+S={...D,...ld("wl_s",{})};H=ld("wl_h",[]);F=ld("wl_f",[]);
+const esc=v=>String(v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
+const ri=n=>{const a=new Uint32Array(1);crypto.getRandomValues(a);return Math.floor(a[0]/4294967296*n)};
+let tt;const toast=m=>{const t=$("toast");t.textContent=m;t.classList.add("on");clearTimeout(tt);tt=setTimeout(()=>t.classList.remove("on"),1800)};
+const buzz=n=>S.haptic&&navigator.vibrate&&navigator.vibrate(n);
+
+/* ---------- INDEXEDDB ---------- */
+const openDB=()=>new Promise((res,rej)=>{const r=indexedDB.open("WordLabV2",1);r.onupgradeneeded=()=>r.result.createObjectStore("lists");r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});
+async function cacheGet(k){try{const d=await openDB();return await new Promise(r=>{const q=d.transaction("lists").objectStore("lists").get(k);q.onsuccess=()=>r(q.result||null);q.onerror=()=>r(null)})}catch{return null}}
+async function cacheSet(k,v){try{const d=await openDB();await new Promise((res,rej)=>{const t=d.transaction("lists","readwrite");t.objectStore("lists").put(v,k);t.oncomplete=res;t.onerror=()=>rej(t.error)})}catch{}}
+
+/* ---------- PARSING & LOADING ---------- */
+function detectType(d){d=(d||"").toLowerCase();
+ if(/^(subst|nomen)|\b(nomen|substantiv)\b/.test(d))return"noun";if(/^adj\.|\badjektiv\b/.test(d))return"adjective";
+ if(/^verb\b|\bverb\b/.test(d))return"verb";if(/^adv\.|\badverb\b/.test(d))return"adverb";return"unknown"}
+function parseLine(line,f,source){
+ if(!line.trim())return null;
+ if(f==="jsonl"){try{const i=JSON.parse(line);if(!i.word)return null;return{word:i.word,type:detectType(i.description),description:i.description||"",base:i.base||null,source}}catch{return null}}
+ const w=line.trim();if(!/^[a-zäöüß]{2,}$/i.test(w))return null;
+ return{word:w,type:"unknown",description:"",base:null,source}}
+const prog=(p,t)=>{$("pb").classList.add("on");$("pb").firstChild.style.width=p+"%";if(t)$("st").textContent=t;if(busy&&p<100)$("go").textContent="LÄDT "+Math.round(p)+" %"};
+const err=m=>{$("st").textContent=m;$("st").style.color="#ff9aa8";toast("Fehler – siehe Hinweis unter dem Button")};
+async function downloadSource(key){
+ const s=SOURCES[key];
+ let r;try{r=await fetch(s.url,{cache:"no-store"})}catch(e){r=await fetch(s.url)}
+ if(!r.ok)throw Error("HTTP "+r.status);
+ const total=Number(r.headers.get("content-length"))||0,rd=r.body.getReader(),dec=new TextDecoder("utf-8");
+ let left="",words=[],got=0,last=0;
+ for(;;){const{done,value}=await rd.read();if(done)break;
+  got+=value.length;left+=dec.decode(value,{stream:true});
+  const lines=left.split("\n");left=lines.pop()||"";
+  for(const l of lines){const i=parseLine(l,s.format,key);if(i)words.push(i)}
+  const n=Date.now();if(n-last>300){prog(total?Math.min(99,got/total*100):30,s.name+" wird geladen … "+Math.round(got/1024)+" KB");last=n}}
+ left+=dec.decode();if(left){const i=parseLine(left,s.format,key);if(i)words.push(i)}
+ if(words.length<100)throw Error("Keine gültige Wortliste erhalten.");
+ prog(100);await cacheSet(key,words);return words}
+async function loadSource(key){
+ const c=await cacheGet(key);
+ if(Array.isArray(c)&&c.length>100){if(key==="spiel")for(let i=0;i<c.length;i++){const w=c[i];if(w.description)w.type=detectType(w.description)}
+  prog(100,SOURCES[key].name+" aus Zwischenspeicher geladen");return c}
+ return downloadSource(key)}
+
+/* ---------- FILTER ---------- */
+function filt(ws){
+ const T=S.types;if(!T.length)throw Error("Bitte mindestens eine Wortart wählen.");
+ const all=T.length===5,st=S.starts.trim().toLowerCase(),en=S.ends.trim().toLowerCase(),has=S.has.trim().toLowerCase(),ex=[...S.excl.toLowerCase().replace(/[^a-zäöüß]/g,"")];
+ return ws.filter(it=>{const w=it.word,l=w.length,lw=w.toLowerCase();
+  if(l<S.min||l>S.max)return 0;
+  if(S.base&&it.base)return 0;
+  if(it.type==="unknown"){if(!all)return 0}else if(!T.includes(it.type))return 0;
+  if(S.freq==="common"&&(!it.description||l>12))return 0;
+  if(S.freq==="rare"&&l<9)return 0;
+  if(S.uml==="with"&&!/[äöüß]/i.test(w))return 0;
+  if(S.uml==="without"&&/[äöüß]/i.test(w))return 0;
+  if(st&&!lw.startsWith(st))return 0;if(en&&!lw.endsWith(en))return 0;if(has&&!lw.includes(has))return 0;
+  if(ex.length&&ex.some(c=>lw.includes(c)))return 0;
+  return 1})}
+async function loadDB(){
+ const sel=[];if(S.srcSpiel)sel.push("spiel");if(S.srcEnz)sel.push("enz");
+ if(!sel.length)throw Error("Mindestens eine Quelle aktivieren (Einstellungen › Erweitert).");
+ const errs=[];db=[];
+ for(const k of sel){
+  try{$("st").textContent=SOURCES[k].name+" wird vorbereitet …";
+   const w=await loadSource(k);for(let i=0;i<w.length;i++)db.push(w[i]);
+   const f=filt(db);if(f.length){src=k;return f}
+   errs.push(SOURCES[k].name+": keine passenden Wörter.")}
+  catch(e){errs.push(SOURCES[k].name+": "+e.message)}}
+ throw Error("Keine passenden Wörter. "+errs.join(" / "))}
+
+/* ---------- DRAW ---------- */
+function pick(n,pool,used){
+ const seen=S.fresh?new Set(H.map(h=>h.word)):null,out=[];let g=0;
+ while(out.length<n&&g++<n*80+300){const it=pool[ri(pool.length)];
+  if(S.unique&&used.has(it.word))continue;if(seen&&seen.has(it.word))continue;
+  used.add(it.word);out.push(it)}
+ return out}
+const det=it=>{const v=[];if(S.showType)v.push(TN[it.type]||"Wort");if(S.meaning&&it.description)v.push(it.description);return v.join(" · ")};
+const isF=it=>F.some(f=>f.word===it.word);
+const cardHTML=(c,i)=>`<div class="c${c.pin?" pin":""}" data-i="${i}"><div class="w">${esc(c.it.word)}</div><small>${esc(det(c.it))}</small><div class="ac"><button data-a="p" aria-label="Sperren">${c.pin?"🔒":"🔓"}</button><button data-a="r" aria-label="Neu würfeln">↻</button><button data-a="f" aria-label="Merken">${isF(c.it)?"♥":"♡"}</button></div></div>`;
+function render(){
+ $("cards").dataset.anim=S.anim;
+ $("cards").innerHTML=cur.length?cur.map(cardHTML).join(""):`<div class="empty"><div class="orb">✦</div>Tippe auf <b>Ziehen</b> oder schüttle dein Handy.<br>Mit 🔒 sperrst du Wörter, mit ↻ würfelst du einzelne neu.</div>`;
+ $("tools").style.display=cur.length?"flex":"none"}
+function spin(i,fin){
+ const c=document.querySelector(`.c[data-i="${i}"]`);if(!c)return;
+ const w=c.querySelector(".w"),s=c.querySelector("small"),my=gen,max=S.anim==="none"?0:10+i*3;let t=0;
+ c.classList.add("spin");s.textContent="";
+ const step=()=>{if(my!==gen)return;
+  if(t>=max){w.textContent=fin.word;s.textContent=det(fin);c.classList.remove("spin");c.classList.add("done");
+   setTimeout(()=>c.classList.remove("done"),700);buzz(12);if(S.speak)say(fin.word);return}
+  w.textContent=P[ri(P.length)].word;w.style.animation="none";void w.offsetWidth;w.style.animation="";
+  t++;timers.push(setTimeout(step,(45+t*t*3.2)/S.speed))};
+ timers.push(setTimeout(step,i*150/S.speed))}
+function addH(items){H.unshift(...items.map(i=>({...i,ts:Date.now()})));if(H.length>300)H.length=300;sv("wl_h",H)}
+async function go(){
+ if(busy)return;busy=true;const b=$("go");b.classList.add("load");b.textContent="LÄDT";$("st").style.color="";$("st").textContent="Wortliste wird vorbereitet … (beim ersten Mal ca. 55 MB)";
+ try{
+  P=await loadDB();
+  const keep=Array.from({length:S.amount},(_,i)=>cur[i]&&cur[i].pin?cur[i]:null);
+  const used=new Set(keep.filter(Boolean).map(c=>c.it.word));
+  const need=keep.filter(x=>!x).length,nw=pick(need,P,used);
+  if(!nw.length&&!used.size)throw Error("Zu wenige passende Wörter – lockere die Filter.");
+  let k=0;
+  cur=keep.map(c=>c||(nw[k]?{it:nw[k++]}:null)).filter(Boolean);
+  gen++;timers.forEach(clearTimeout);timers=[];
+  render();
+  const newIdx=cur.map((c,i)=>i).filter(i=>!cur[i].pin);
+  newIdx.forEach(i=>spin(i,cur[i].it));
+  addH(newIdx.map(i=>cur[i].it));
+  $("st").textContent=P.length.toLocaleString("de-DE")+" passende Wörter · "+SOURCES[src].name;
+  setTimeout(()=>$("pb").classList.remove("on"),600);
+ }catch(e){err(e.message||String(e));$("pb").classList.remove("on")}
+ finally{busy=false;b.classList.remove("load");b.textContent="✦ ZIEHEN"}}
+function reroll(i){
+ try{P=filt(db.length?db:cur.map(c=>c.it));const used=new Set(cur.map(c=>c.it.word)),n=pick(1,P,used)[0];
+  if(!n)return toast("Keine weiteren Wörter");
+  gen++;cur[i]={it:n,pin:false};render();spin(i,n);addH([n])}catch(e){toast(e.message)}}
+function toggleFav(it){const x=F.findIndex(f=>f.word===it.word);
+ if(x>=0)F.splice(x,1);else F.unshift({word:it.word,type:it.type,description:it.description,base:it.base,ts:Date.now()});
+ sv("wl_f",F);buzz(8);toast(x>=0?"Aus Merkliste entfernt":"Gemerkt ♥")}
+
+/* ---------- SHEET ---------- */
+function say(w){try{const u=new SpeechSynthesisUtterance(w);u.lang="de-DE";speechSynthesis.cancel();speechSynthesis.speak(u)}catch{}}
+function sheet(it){
+ const syl=(it.word.toLowerCase().match(/(?:[aeiouyäöü]+)/g)||[]).length||1;
+ $("sh").innerHTML=`<div class="gr"></div><h3>${esc(it.word)}</h3>
+ <div class="fa"><span>${TN[it.type]||"Wort"}</span><span>${it.word.length} Buchstaben</span><span>≈ ${syl} Silben</span>${it.base?`<span>Grundform: ${esc(it.base)}</span>`:""}</div>
+ ${it.description?`<p>${esc(it.description)}</p>`:`<p style="color:var(--m)">Zu diesem Wort liefert die Liste keine Bedeutung.</p>`}
+ <p style="color:var(--m);font-size:12px">Rückwärts: ${esc([...it.word].reverse().join(""))}</p>
+ <div class="ba"><button id="s1">🔊 Vorlesen</button><button id="s2">${isF(it)?"♥ Gemerkt":"♡ Merken"}</button>
+ <a target="_blank" rel="noopener" href="https://www.duden.de/suchen/dudenonline/${encodeURIComponent(it.word)}">Duden ↗</a>
+ <a target="_blank" rel="noopener" href="https://de.wiktionary.org/wiki/${encodeURIComponent(it.word)}">Wiktionary ↗</a></div>`;
+ $("ov").classList.add("on");
+ $("s1").onclick=()=>say(it.word);
+ $("s2").onclick=()=>{toggleFav(it);sheet(it);render();hist()}}
+$("ov").onclick=e=>{if(e.target.id==="ov")$("ov").classList.remove("on")};
+
+/* ---------- HISTORY ---------- */
+function hist(){
+ const l=hf?F:H;
+ $("hA").classList.toggle("on",!hf);$("hF").classList.toggle("on",hf);
+ $("hl").innerHTML=l.length?l.slice(0,150).map((it,i)=>`<div class="hr" style="animation-delay:${Math.min(i,12)*25}ms" data-i="${i}"><b>${esc(it.word)}</b><small>${TN[it.type]||""}<br>${new Date(it.ts).toLocaleString("de-DE",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"})}</small></div>`).join(""):`<div class="empty">${hf?"Noch nichts gemerkt. Tippe bei einem Wort auf ♡.":"Noch keine Wörter gezogen."}</div>`}
+$("hl").onclick=e=>{const r=e.target.closest(".hr");if(r)sheet((hf?F:H)[r.dataset.i])};
+$("hA").onclick=()=>{hf=false;hist()};$("hF").onclick=()=>{hf=true;hist()};
+$("hC").onclick=()=>{H=[];sv("wl_h",H);hist();toast("Verlauf geleert")};
+
+/* ---------- SETTINGS UI ---------- */
+const sumTxt=()=>{const t=S.types.length===5?"Alle Wortarten":S.types.map(x=>TN[x]).join(", ");
+ const n=["starts","has","ends","excl"].filter(k=>S[k].trim()).length+(S.uml!=="all")+(S.freq!=="all");
+ return`<b onclick="show(1)">${t} · ${S.min}–${S.max} Zeichen${n?" · +"+n+" Filter":""}</b>`};
+function upd(k){
+ if(S.min>S.max){if(k==="min")S.max=S.min;else S.min=S.max}
+ sv("wl_s",S);sync()}
+function sync(){
+ QA("[data-k]").forEach(el=>{const v=S[el.dataset.k];
+  if(el.classList.contains("seg"))[...el.children].forEach(b=>b.classList.toggle("on",b.dataset.v==v));
+  else if(el.type==="checkbox")el.checked=v;else if(el.value!=v)el.value=v});
+ QA("[data-t]").forEach(b=>b.classList.toggle("on",b.dataset.t==="all"?S.types.length===5:S.types.includes(b.dataset.t)));
+ const r=document.documentElement.style;r.setProperty("--h",S.hue);r.setProperty("--fs",S.size/100);
+ $("am").textContent=S.amount+(S.amount===1?" Wort":" Wörter");$("amL").textContent=$("am").textContent;
+ $("miL").textContent=S.min+" Zeichen";$("maL").textContent=S.max+" Zeichen";$("szL").textContent=S.size+" %";
+ $("sum").innerHTML=sumTxt();$("cards").dataset.anim=S.anim;
+ QA("#pre .chip").forEach(c=>c.classList.remove("on"))}
+QA("[data-k]").forEach(el=>{const k=el.dataset.k;
+ if(el.classList.contains("seg"))el.onclick=e=>{const b=e.target.closest("button");if(!b)return;S[k]=isNaN(b.dataset.v)?b.dataset.v:+b.dataset.v;buzz(6);upd(k)};
+ else if(el.type==="checkbox")el.onchange=()=>{S[k]=el.checked;buzz(6);if(k==="shake"&&S.shake)askMotion();upd(k)};
+ else el.oninput=()=>{S[k]=el.type==="range"?+el.value:el.value;upd(k)}});
+$("tt").onclick=e=>{const b=e.target.closest("button");if(!b)return;const t=b.dataset.t;
+ if(t==="all")S.types=S.types.length===5?[]:ALL.slice();
+ else S.types=S.types.includes(t)?S.types.filter(x=>x!==t):[...S.types,t];buzz(6);upd()};
+$("pre").innerHTML=Object.keys(PR).map(n=>`<button class="chip" data-p="${esc(n)}">${esc(n)}</button>`).join("");
+$("pre").onclick=e=>{const b=e.target.closest(".chip");if(!b)return;
+ S={...S,types:D.types,min:2,max:30,freq:"all",starts:"",has:"",ends:"",excl:"",uml:"all",...PR[b.dataset.p]};upd();b.classList.add("on");toast("Profil: "+b.dataset.p)};
+$("m").onclick=()=>{S.amount=Math.max(1,S.amount-1);buzz(6);upd()};
+$("pl").onclick=()=>{S.amount=Math.min(30,S.amount+1);buzz(6);upd()};
+$("rs").onclick=()=>{S={...D};upd();toast("Zurückgesetzt")};
+$("cc").onclick=async()=>{try{const d=await openDB();await new Promise((res,rej)=>{const t=d.transaction("lists","readwrite");t.objectStore("lists").clear();t.oncomplete=res;t.onerror=()=>rej()});db=[];toast("Zwischenspeicher gelöscht")}catch{toast("Löschen fehlgeschlagen")}};
+
+/* ---------- NAV / EVENTS ---------- */
+function show(n){
+ QA(".v").forEach((v,i)=>v.classList.toggle("on",i===n));
+ QA("#nav button").forEach((b,i)=>b.classList.toggle("on",i===n));
+ $("nav").style.setProperty("--i",n);scrollTo({top:0,behavior:"smooth"});if(n===2)hist()}
+QA("#nav button").forEach(b=>b.onclick=()=>{buzz(6);show(+b.dataset.n)});
+$("go").onclick=go;
+$("cards").onclick=e=>{const c=e.target.closest(".c");if(!c)return;const i=+c.dataset.i,a=e.target.closest("button");
+ if(!a)return sheet(cur[i].it);
+ if(a.dataset.a==="p"){cur[i].pin=!cur[i].pin;buzz(10);c.classList.toggle("pin",cur[i].pin);a.textContent=cur[i].pin?"🔒":"🔓"}
+ if(a.dataset.a==="r")reroll(i);
+ if(a.dataset.a==="f"){toggleFav(cur[i].it);a.textContent=isF(cur[i].it)?"♥":"♡"}};
+const txt=()=>cur.map(c=>c.it.word+(det(c.it)?" — "+det(c.it):"")).join("\n");
+$("cp").onclick=async()=>{try{await navigator.clipboard.writeText(txt());toast("Kopiert")}catch{toast("Kopieren nicht verfügbar")}};
+$("sh2").onclick=async()=>{try{navigator.share?await navigator.share({title:"WORD LAB",text:txt()}):(await navigator.clipboard.writeText(txt()),toast("Kopiert"))}catch{}};
+
+/* ---------- SHAKE ---------- */
+function askMotion(){if(typeof DeviceMotionEvent!=="undefined"&&typeof DeviceMotionEvent.requestPermission==="function")
+ DeviceMotionEvent.requestPermission().then(r=>{if(r!=="granted"){S.shake=false;upd()}}).catch(()=>{})}
+addEventListener("devicemotion",e=>{if(!S.shake||!$("v0").classList.contains("on"))return;const a=e.accelerationIncludingGravity;if(!a)return;
+ const m=Math.abs(a.x)+Math.abs(a.y)+Math.abs(a.z),t=Date.now();if(m>40&&t-lastShake>1800){lastShake=t;go()}});
+
+addEventListener("error",e=>err("Fehler: "+e.message));addEventListener("unhandledrejection",e=>err("Fehler: "+(e.reason&&e.reason.message||e.reason)));
+sync();render();
+</script>
+</body>
+</html>
