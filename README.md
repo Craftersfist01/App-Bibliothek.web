@@ -1,2 +1,2 @@
-# wordlab
-Meine Wordlab App
+# App-Lib
+Meine Lib App
