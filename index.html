@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Apps">
+<meta name="theme-color" content="#070814">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<title>App Library</title>
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<div id="bg" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><b></b></div>
+<div id="lib"><div class="wrap">
+  <header id="hd">
+    <div class="hello" id="hello"></div>
+    <div class="bar"><h1 id="title">Entdecken</h1>
+      <label class="search glass" id="sbox"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="q" type="search" placeholder="Apps und Games suchen" autocomplete="off" enterkeyhint="search" aria-label="Suchen"></label>
+      <button class="ib glass" id="refreshBtn" aria-label="Aktualisieren"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg></button></div>
+    <div class="tools" id="tools"></div>
+  </header>
+  <main id="content"></main>
+</div></div>
+<nav id="tabs" class="glass" aria-label="Hauptnavigation"></nav>
+<div id="appview"><iframe id="frame" title="App" allow="fullscreen; camera; microphone; geolocation; clipboard-read; clipboard-write; autoplay; accelerometer; gyroscope; web-share" allowfullscreen></iframe></div>
+<button id="hot" aria-label="Zur Bibliothek zurück (mit Touch: oben rechts gedrückt halten)"></button>
+<button id="xb" class="glass" aria-label="App schließen">✕</button>
+<div id="detail"></div>
+<div id="toasts" aria-live="polite"></div>
+
+<script src="js/vendor/qrcode.js"></script>
+<script src="js/core.js"></script>
+<script src="js/sources.js"></script>
+<script src="js/metadata.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/detail.js"></script>
+<script src="js/launcher.js"></script>
+<script src="js/notify.js"></script>
+<script src="js/share.js"></script>
+<script src="js/settings.js"></script>
+<script src="js/local.js"></script>
+<script src="js/updater.js"></script>
+<script src="js/scan.js"></script>
+<script src="js/extras.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

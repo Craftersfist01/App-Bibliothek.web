@@ -1,5 +1,8 @@
 # App-Bibliothek 2.0
 
+## Design
+Premium-Oberfläche mit lebendigem Hintergrund aus fünf bewegten Farbfeldern (Hell und Dunkel mit eigener Palette), Glas-Effekten, Tiefe durch Schatten und Licht, großen Karten mit 3D-Neigung und Lichtreflex, Hervorhebungs-Karussell, weichen Einblend-Animationen, schwebender Navigation mit gleitender Anzeige und Detailseite mit Medien-Galerie. Technisch: CSS Custom Properties, `@property`, `backdrop-filter`, Scroll-Snap, IntersectionObserver, Pointer-Events; Animationen laufen auf `transform` und `opacity`. Der Notfallmodus schaltet alle Effekte ab. Technische Angaben stehen in der Detailansicht und in den Einstellungen unter „Erweitert“.
+
 ## Projektstruktur
 - `index.html` – Gerüst; `css/app.css` – Design; `sw.js` – Offline-Cache und Auslieferung lokaler Apps; `manifest.webmanifest`, `icon.svg`
 - `js/` (Ladereihenfolge): `core` Hilfen/Fehleranzeige · `sources` Zustand, Quellen, GitHub-Laden · `metadata` app.json und HTML-Auslese · `ui` Karten, Navigation · `detail` Detailseite · `launcher` Vollbild, Zurück-Geste · `notify` Hinweise · `share` Links · `settings` Einstellungen, Systemcheck · `local` lokale Apps, ZIP-Export, QR · `main` Start
@@ -15,7 +18,7 @@ Einstellungen → Meine Quellen → „nutzer/repository“ eingeben. Das Reposi
 ## Metadaten (`library-data/NAME/app.json`)
 NAME = Dateiname ohne `.html` bzw. Ordnername. Alle Felder optional, unbekannte werden ignoriert:
 `name, description, type ("app"|"game"), category, tags[], icon, previews[], version, developer, published, modified, offline, color, changelog[]`
-Icon liegt in `library-data/NAME/`, Vorschauen ohne Pfad in `library-data/NAME/previews/` (Bilder, GIF, mp4/webm).
+Der Ordnername wird ohne Beachtung von Groß-/Kleinschreibung, Leerzeichen, `-` und `_` zugeordnet. Auch ohne `app.json` werden `icon.*`/`logo.*` und alle Dateien in `previews/` (Bilder, GIF, mp4/webm, natürlich sortiert) übernommen. Icon und Vorschauen ohne Pfad in der `app.json` werden in `library-data/NAME/` bzw. `previews/` gesucht. Fehler in der `app.json` zeigt die Detailansicht unter „Hinweis“.
 
 ## App importieren (lokal)
 Einstellungen → Eigene Apps → HTML-Datei oder ZIP wählen. Die ZIP braucht `index.html` im Hauptordner; Pfade mit `..`, absolute Pfade und Laufwerke werden abgelehnt, es wird alles oder nichts gespeichert. Lokale Apps liegen in IndexedDB und werden vom Service Worker unter `local/<id>/` ausgeliefert. Sie lassen sich als ZIP exportieren und löschen, nie hochladen.
@@ -60,37 +63,8 @@ Die Bibliothek und alles, was einmal geöffnet wurde (gleiche Domain), liegt im 
 - Apps aus Bibliotheks-Quellen (`library-export.json`) lassen sich öffnen und per Direktlink teilen, aber nicht installieren.
 - Apps derselben Domain teilen sich localStorage/IndexedDB; echte Trennung gibt es nur zwischen Domains.
 - Lokale Apps: root-absolute Pfade werden über den Service Worker auf die App-Dateien abgebildet; Webapps mit eigenem Service Worker können Konflikte verursachen.
-- Die Zurück-Ecke oben rechts (ca. 52 px) gehört der Bibliothek; Tippen dort erreicht die App nicht.
+- Zurück-Geste: Bei Apps von derselben Domain (eigenes Repository, installierte und lokale Apps) liegt nichts über der App, die Geste wird direkt beobachtet und blockiert nichts. Bei Apps fremder Domains verbietet der Browser das Mitlesen; dort liegt eine kleine Fläche (40 px) oben rechts über der App, die Taps schluckt.
 - GitHub-API ohne Key: 60 Anfragen pro Stunde und IP.
 
 ## Fehlerbehebung
 Systemcheck unter Einstellungen → System. Bei Problemen Notfallmodus aktivieren oder „Cache leeren“. Seite nach einem Update des Service Workers einmal neu laden.
-
-## Ordnerstruktur 
-/                          ← Hauptverzeichnis des Repositories
-├── index.html
-├── sw.js
-├── manifest.webmanifest
-├── icon.svg
-├── README.md
-├── css/
-│   └── app.css
-├── js/
-│   ├── core.js, sources.js, metadata.js, ui.js, detail.js,
-│   │   launcher.js, notify.js, share.js, settings.js,
-│   │   local.js, updater.js, scan.js, extras.js, main.js
-│   └── vendor/
-│       ├── qrcode.js, jszip.min.js, jsqr.js
-│
-├── htmls/                 ← deine HTML-Dateien (hast du schon)
-│   └── mein-spiel.html
-├── webapps/               ← deine Webapps (hast du schon)
-│   └── rechner/
-│       └── index.html
-└── library-data/          ← optional, kommt neu dazu
-    └── mein-spiel/        ← Name der Datei ohne .html bzw. Ordnername
-        ├── app.json
-        ├── icon.png
-        └── previews/
-            ├── screenshot-1.jpg
-            └── gameplay.mp4
