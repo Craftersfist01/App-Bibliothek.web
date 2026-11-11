@@ -1,0 +1,19 @@
+{
+  "name": "Vocably",
+  "description": "Vokabeln erstellen, organisieren und mit Karteikarten lernen. Mit Lernfortschritt, Statistiken und Sprachausgabe.",
+  "type": "app",
+  "category": "Lernen & Sprachen",
+  "tags": [
+    "Vokabeln",
+    "Sprachen",
+    "Lernen",
+    "Karteikarten",
+    "Quiz",
+    "Sprachausgabe"
+  ],
+  "icon": "icon-512.png",
+  "version": "1.0",
+  "developer": "Vocably",
+  "color": "#1f3d2e",
+  "published": true
+}
