@@ -65,3 +65,32 @@ Die Bibliothek und alles, was einmal geöffnet wurde (gleiche Domain), liegt im 
 
 ## Fehlerbehebung
 Systemcheck unter Einstellungen → System. Bei Problemen Notfallmodus aktivieren oder „Cache leeren“. Seite nach einem Update des Service Workers einmal neu laden.
+
+## Ordnerstruktur 
+/                          ← Hauptverzeichnis des Repositories
+├── index.html
+├── sw.js
+├── manifest.webmanifest
+├── icon.svg
+├── README.md
+├── css/
+│   └── app.css
+├── js/
+│   ├── core.js, sources.js, metadata.js, ui.js, detail.js,
+│   │   launcher.js, notify.js, share.js, settings.js,
+│   │   local.js, updater.js, scan.js, extras.js, main.js
+│   └── vendor/
+│       ├── qrcode.js, jszip.min.js, jsqr.js
+│
+├── htmls/                 ← deine HTML-Dateien (hast du schon)
+│   └── mein-spiel.html
+├── webapps/               ← deine Webapps (hast du schon)
+│   └── rechner/
+│       └── index.html
+└── library-data/          ← optional, kommt neu dazu
+    └── mein-spiel/        ← Name der Datei ohne .html bzw. Ordnername
+        ├── app.json
+        ├── icon.png
+        └── previews/
+            ├── screenshot-1.jpg
+            └── gameplay.mp4
