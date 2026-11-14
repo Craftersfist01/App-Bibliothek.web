@@ -1,0 +1,19 @@
+/* iOS Home Screen / standalone viewport sizing: keep the app canvas edge-to-edge. */
+:root,html,body{width:100%;height:100%;min-height:100%;margin:0}
+html{height:100%;height:100dvh}
+body{min-height:100dvh;min-height:-webkit-fill-available}
+#lib{inset:0;width:100%;height:100%;height:100dvh;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-bottom:calc(88px + env(safe-area-inset-bottom,0px))}
+#tabs{bottom:env(safe-area-inset-bottom,0px)}
+#appview{inset:0;width:100%;height:100%;height:100dvh}
+#frame{position:absolute;inset:0;width:100%;height:100%;height:100dvh;min-height:100%;border:0}
+#detail{inset:0;width:100%;height:100%;height:100dvh}
+.dp{bottom:0;padding-bottom:env(safe-area-inset-bottom,0px)}
+@supports (-webkit-touch-callout:none){
+  html{height:-webkit-fill-available}
+  body{height:100%;min-height:-webkit-fill-available}
+  #lib,#appview,#detail{height:100%;height:100dvh}
+}
+@media (display-mode:standalone){
+  #lib{padding-top:0}
+  #tabs{bottom:env(safe-area-inset-bottom,0px)}
+}
