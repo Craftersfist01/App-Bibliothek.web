@@ -1,5 +1,15 @@
 "use strict";
 /* ---------- App starten / schließen + Zurück-Geste ---------- */
+const setViewportHeight = () => {
+  const h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+  document.documentElement.style.setProperty('--app-vh', `${h}px`);
+  document.documentElement.style.setProperty('--safe-top', `${getComputedStyle(document.documentElement).getPropertyValue('--safe-top') || '0px'}`);
+};
+
+setViewportHeight();
+window.addEventListener('resize', setViewportHeight, { passive: true });
+if (window.visualViewport) window.visualViewport.addEventListener('resize', setViewportHeight, { passive: true });
+
 function openApp(a){
   recents = [a.id, ...recents.filter(x => x !== a.id)].slice(0, 12); LS.set('al.recents', recents); logOpen(a);
   $('#frame').setAttribute('allow', allowFor(a)); $('#frame').src = a.openUrl || a.url; document.body.classList.add('running', 'ovl'); document.title = a.name;
@@ -31,4 +41,3 @@ hot.addEventListener('contextmenu', e => e.preventDefault());
 hot.addEventListener('click', e => { if (e.detail === 0) closeApp(); }); /* Tastatur / Screenreader */
 $('#xb').onclick = closeApp;
 addEventListener('keydown', e => { if (e.key === 'Escape'){ if ($('#detail').classList.contains('open')) closeDetail(); else if (document.body.classList.contains('running')) closeApp(); } });
-
