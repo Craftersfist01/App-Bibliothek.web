@@ -11,7 +11,7 @@
     "Quiz",
     "Sprachausgabe"
   ],
-  "icon": "icon-512.png",
+  "icon": "icon.svg",
   "version": "1.0",
   "developer": "Vocably",
   "color": "#1f3d2e",
