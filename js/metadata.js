@@ -28,9 +28,12 @@ async function readMeta(a){
   const lib = { icon: ld && ld.icon ? abs(enc(ld.icon), jb) : '', previews: ld ? (ld.previews || []).map(p => abs(enc(p), jb)) : [] };
   let m;
   if (j){
+    const rawIcon = typeof j.icon === 'string' ? j.icon.trim() : '';
+    const iconUrl = rawIcon ? abs(rawIcon, jb) : '';
+    const autoIcon = /(icon|logo)\.(png|jpe?g|webp|gif|svg|avif|ico)$/i.test(rawIcon || '') ? iconUrl : (lib.icon || new URL('icon.svg', jb).href);
     const pv = arr(j.previews || j.preview).map(p => { p = typeof p === 'string' ? p : p && p.src; return p ? abs(/\/|^https?:/.test(p) ? p : 'previews/' + p, jb) : ''; }).filter(Boolean);
     m = { json: true, name: j.name || j.displayName, desc: j.description, type: j.type === 'game' ? 'game' : 'app', category: j.category, tags: arr(j.tags).map(String),
-      icon: abs(j.icon, jb) || lib.icon, previews: pv.length ? pv : lib.previews, version: j.version, dev: j.developer, pub: j.published, mod: j.modified,
+      icon: autoIcon, previews: pv.length ? pv : lib.previews, version: j.version, dev: j.developer, pub: j.published, mod: j.modified,
       changelog: arr(j.changelog), permissions: arr(j.permissions).map(String), features: arr(j.features || j.supports).map(String),
       migration: j.migration && typeof j.migration === 'object' ? j.migration : null, offline: j.offline, hue: toHue(j.color) };
   } else { /* Rückfall: HTML auslesen (ohne Skriptausführung), library-data-Medien trotzdem verwenden */
@@ -43,14 +46,13 @@ async function readMeta(a){
       let name = mt('apple-mobile-web-app-title') || mt('og:site_name'); if (!name && t && t.length <= 28) name = t;
       m = { name, desc: (mt('description') || mt('og:description')).slice(0, 160), og, hue: toHue(mt('theme-color')), previews: lib.previews,
         icon: lib.icon || lk('apple-touch-icon') || abs(q('link[rel~="icon"][href]')?.getAttribute('href')) || og };
-    } catch (e){ if (!lib.icon && !lib.previews.length) throw e; m = { icon: lib.icon, previews: lib.previews }; }
+    } catch (e){ if (!lib.icon && !lib.previews.length) throw e; m = { icon: lib.icon || new URL('icon.svg', jb).href, previews: lib.previews }; }
   }
   m.t = Date.now(); m.v = 2; if (err) m.err = err; return m;
 }
 let rt = 0; const soft = () => { clearTimeout(rt); rt = setTimeout(() => { if (view === 'discover' || view === 'mine') render(); }, 350); };
 async function enrich(force){
   const todo = apps.filter(a => !['url', 'local', 'lib'].includes(a.cat) && (force || !meta[a.id] || meta[a.id].v !== 2 || Date.now() - meta[a.id].t > 864e5)), snap = apps; let i = 0;
-  const w = async () => { while (i < todo.length && snap === apps){ const a = todo[i++]; try { meta[a.id] = await readMeta(a); a.broken = false; applyMeta(a, meta[a.id]); } catch { a.broken = true; } soft(); } };
+  const w = async () => { while (i < todo.length && snap === apps){ const a = todo[i++]; try { meta[a.id] = await readMeta(a); a.broken = false; applyMeta(a, meta[a.id]); } catch { a.broken = true; } } };
   await Promise.all([w(), w(), w(), w()]); LS.set('al.meta', meta);
 }
-
