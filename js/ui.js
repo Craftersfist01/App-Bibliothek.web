@@ -154,8 +154,13 @@ function renderInner(){
 }
 /* Kopfzeile schrumpft beim Scrollen, Hintergrund reagiert auf Scrollen und Mauszeiger */
 (function(){
-  const lib = $('#lib'), hd = $('#hd'); let tick = 0;
-  lib.addEventListener('scroll', () => { if (tick) return; tick = requestAnimationFrame(() => { tick = 0; document.documentElement.style.setProperty('--sy', lib.scrollTop); hd.classList.toggle('sm', lib.scrollTop > 40); }); }, { passive: true });
+  const lib = $('#lib'), hd = $('#hd'); let tick = 0, idle = 0;
+  lib.addEventListener('scroll', () => {
+    document.body.classList.add('scrolling'); clearTimeout(idle);
+    idle = setTimeout(() => document.body.classList.remove('scrolling'), 140);
+    if (tick) return;
+    tick = requestAnimationFrame(() => { tick = 0; document.documentElement.style.setProperty('--sy', lib.scrollTop); hd.classList.toggle('sm', lib.scrollTop > 40); });
+  }, { passive: true });
   if (fine) addEventListener('pointermove', e => { document.documentElement.style.setProperty('--px', (e.clientX / innerWidth - .5).toFixed(3)); document.documentElement.style.setProperty('--py', (e.clientY / innerHeight - .5).toFixed(3)); }, { passive: true });
   $('#refreshBtn').onclick = () => { const b = $('#refreshBtn'); b.classList.add('spin'); loadAll(true).finally(() => b.classList.remove('spin')); };
 })();
