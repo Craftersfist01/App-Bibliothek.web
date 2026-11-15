@@ -33,35 +33,38 @@ function tilt(c){
   c.addEventListener('pointerleave', () => { c.style.setProperty('--rx', '0deg'); c.style.setProperty('--ry', '0deg'); });
 }
 function favBtn(a){
-  const on = favs.includes(a.id), f = el('button', 'fav' + (on ? ' on' : ''), on ? '♥' : '♡'); f.dataset.id = a.id; f.setAttribute('aria-label', 'Favorit'); f.setAttribute('aria-pressed', String(on));
+  const on = favs.includes(a.id), f = el('button', 'fav' + (on ? ' on' : ''), on ? '♥' : '♡'); f.dataset.id = a.id; f.setAttribute('aria-label', on ? `${a.name} aus Favoriten entfernen` : `${a.name} zu Favoriten hinzufügen`); f.setAttribute('aria-pressed', String(on)); f.title = on ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufügen';
   f.onclick = e => {
     e.stopPropagation(); favs = favs.includes(a.id) ? favs.filter(x => x !== a.id) : [a.id, ...favs]; LS.set('al.favs', favs); tip('fav', 'Mit dem Herz findest du deine Lieblingsapps schneller.');
     const now = favs.includes(a.id);
-    document.querySelectorAll('.fav').forEach(b => { if (b.dataset.id !== a.id) return; b.classList.toggle('on', now); b.textContent = now ? '♥' : '♡'; b.setAttribute('aria-pressed', String(now)); });
+    document.querySelectorAll('.fav').forEach(b => { if (b.dataset.id !== a.id) return; b.classList.toggle('on', now); b.textContent = now ? '♥' : '♡'; b.setAttribute('aria-label', now ? `${a.name} aus Favoriten entfernen` : `${a.name} zu Favoriten hinzufügen`); b.setAttribute('aria-pressed', String(now)); b.title = now ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufügen'; });
     f.classList.remove('pop'); void f.offsetWidth; f.classList.add('pop'); if (view === 'mine') setTimeout(render, 450);
   };
   return f;
 }
 function card(a, i){
-  const c = el('article', 'card glass'); c.style.setProperty('--h', a.hue); c.tabIndex = 0; c.dataset.id = a.id; c.setAttribute('role', 'button'); c.setAttribute('aria-label', a.name + ' – Details');
+  const c = el('article', 'card glass'); c.style.setProperty('--h', a.hue); c.tabIndex = 0; c.dataset.id = a.id; c.setAttribute('role', 'group'); c.setAttribute('aria-label', [a.name, a.category, a.inst || a.local ? 'offline verfügbar' : '', 'Details'].filter(Boolean).join(' – '));
   const pv = el('div', 'pv'), src = cover(a); pv.appendChild(src ? media(src, a) : iconEl(a, 'xl'));
   const pi = iconEl(a); pi.classList.add('pi'); pv.appendChild(pi);
   if (a.update) pv.appendChild(el('span', 'badge', 'Update'));
+  else if (a.inst || a.local) pv.appendChild(el('span', 'badge offline-badge', 'Offline'));
+  if (a.dups && a.dups.length) pv.appendChild(el('span', 'badge duplicate-badge', 'Mehrfach vorhanden'));
   if (sort === 'manual' && view === 'discover'){ const h = el('button', 'dh', '⠿'); h.setAttribute('aria-label', 'Verschieben'); h.onclick = e => e.stopPropagation(); pv.appendChild(h); }
   const t = el('div', 'txt'); t.append(el('div', 'nm', ((S.pins || []).includes(a.id) ? '📌 ' : '') + a.name), el('div', 'ds', a.desc || ''));
   const go = el('button', 'btn', goLabel(a)); go.onclick = e => { e.stopPropagation(); openApp(a); };
   const b = el('div', 'body'); b.append(t, go); c.append(pv, favBtn(a), b);
-  c.onclick = () => detail(a); c.onkeydown = e => { if (e.key === 'Enter'){ e.preventDefault(); detail(a); } };
+  c.onclick = e => { if (e.target.closest('button')) return; detail(a); };
+  c.onkeydown = e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); detail(a); } };
   tilt(c); reveal(c, i); return c;
 }
 function feat(a, kicker, i){
-  const c = el('article', 'feat'); c.style.setProperty('--h', a.hue); c.tabIndex = 0; c.dataset.id = a.id; c.setAttribute('role', 'button'); c.setAttribute('aria-label', a.name + ' – Details');
+  const c = el('article', 'feat'); c.style.setProperty('--h', a.hue); c.tabIndex = 0; c.dataset.id = a.id; c.setAttribute('role', 'group'); c.setAttribute('aria-label', a.name + ' – Details');
   const src = cover(a), bg = el('div', 'fbg');
   if (src){ const m = media(src, a); m.classList.add('kb'); bg.appendChild(m); } else bg.appendChild(el('span', 'big', (a.name[0] || '?').toUpperCase()));
   const t = el('div', 'ft'), go = el('button', 'btn', goLabel(a)); go.onclick = e => { e.stopPropagation(); openApp(a); };
   t.append(el('span', 'kicker', kicker), el('h3', null, a.name), el('p', null, a.desc || ''), go);
   const pi = iconEl(a); pi.classList.add('fi');
-  c.append(bg, pi, favBtn(a), t); c.onclick = () => detail(a); c.onkeydown = e => { if (e.key === 'Enter'){ e.preventDefault(); detail(a); } };
+  c.append(bg, pi, favBtn(a), t); c.onclick = e => { if (e.target.closest('button')) return; detail(a); }; c.onkeydown = e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); detail(a); } };
   reveal(c, i); return c;
 }
 function highlights(list){
@@ -81,10 +84,33 @@ function msg(t, p, btnTxt, fn){
 }
 function visible(){
   const q = query.trim().toLowerCase();
-  const l = apps.filter(a => (typeF === 'all' || a.type === typeF) && (!q || [a.name, a.desc, a.file, ...(a.tags || [])].join(' ').toLowerCase().includes(q)));
+  const l = apps.filter(a => (typeF === 'all' || a.type === typeF) && (!q || [
+    a.name, a.desc, a.file, a.category, a.dev, a.pub, a.version,
+    ...(a.tags || []), ...(a.features || [])
+  ].filter(Boolean).join(' ').toLowerCase().includes(q)));
   const rk = a => (recents.indexOf(a.id) + 1) || 999;
   l.sort(sort === 'manual' ? (a, b) => orderIdx(a) - orderIdx(b) : sort === 'recent' ? (a, b) => rk(a) - rk(b) : sort === 'source' ? (a, b) => (srcOf(a).name || '').localeCompare(srcOf(b).name || '', 'de') || a.name.localeCompare(b.name, 'de') : (a, b) => a.name.localeCompare(b.name, 'de', { numeric: true }));
   l.sort((a, b) => (S.pins || []).includes(b.id) - (S.pins || []).includes(a.id)); return l;
+}
+function categoryName(a){
+  const category = String(a.category || '').trim();
+  if (category) return category;
+  const tag = (a.tags || []).find(t => String(t).trim());
+  return tag ? String(tag).trim() : 'Weitere Apps';
+}
+function categorySections(list){
+  const groups = new Map();
+  list.forEach(a => {
+    const name = categoryName(a), key = name.toLocaleLowerCase('de');
+    const group = groups.get(key) || { name, apps: [] };
+    group.apps.push(a); groups.set(key, group);
+  });
+  return [...groups.values()]
+    .sort((a, b) => b.apps.length - a.apps.length || a.name.localeCompare(b.name, 'de'))
+    .slice(0, 6);
+}
+function resetSearch(){
+  query = ''; typeF = 'all'; sort = 'name'; $('#q').value = ''; render(); $('#q').focus();
 }
 function buildNav(){
   const nav = $('#tabs'); if (nav.dataset.ok) return; nav.dataset.ok = '1';
@@ -109,9 +135,10 @@ function renderInner(){
     if (loading && !apps.length){ const g = el('div', 'grid'); g.style.marginTop = '24px'; for (let i = 0; i < 6; i++) g.appendChild(el('div', 'sk')); root.appendChild(g); return; }
     const l = visible();
     if (!apps.length) return root.appendChild(msg('Noch keine Apps', 'Lege .html-Dateien in „htmls“ oder Ordner mit index.html in „webapps“, oder füge unter Einstellungen eine Quelle hinzu.', 'Aktualisieren', () => loadAll(true)));
-    if (!l.length) return root.appendChild(msg('Keine Treffer', 'Passe Suche oder Filter an.'));
+    if (!l.length) return root.appendChild(msg('Keine Treffer', 'Passe Suche oder Filter an.', 'Suche zurücksetzen', resetSearch));
     if (!query.trim() && typeF === 'all' && sort !== 'manual'){
       const h = highlights(l); if (h.length){ const s = el('section'), row = el('div', 'row'); h.forEach(([a, k], i) => row.appendChild(feat(a, k, i))); s.appendChild(row); root.appendChild(s); }
+      categorySections(l).forEach(g => root.appendChild(section(g.name, g.apps.slice(0, 6), 'In dieser Kategorie gibt es noch keine Apps.')));
     }
     const s = el('section'), h2 = el('h2', null, query.trim() ? 'Suchergebnisse' : 'Alle Apps & Games'), g = el('div', 'grid'); h2.appendChild(el('small', null, String(l.length)));
     l.forEach((a, i) => g.appendChild(safeCard(a, i))); s.append(h2, g); root.appendChild(s); if (sort === 'manual') enableDrag(g);
