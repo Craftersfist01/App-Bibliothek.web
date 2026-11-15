@@ -22,7 +22,13 @@ function markUpdates(){
 }
 function busy(t){
   let b = $('#busy'); if (!t) return b && b.remove();
-  if (!b){ b = el('div', 'toast glass'); b.id = 'busy'; b.style.animation = 'none'; $('#toasts').appendChild(b); } b.textContent = t;
+  if (!b){
+    b = el('div', 'toast glass'); b.id = 'busy'; b.style.animation = 'none'; b.setAttribute('role', 'status'); b.setAttribute('aria-live', 'polite');
+    const text = el('span'), progress = el('progress'); progress.max = 1; progress.value = 0; b.append(text, progress); b._text = text; b._progress = progress; $('#toasts').appendChild(b);
+  }
+  b._text.textContent = t;
+  b._progress.hidden = arguments.length < 2;
+  if (arguments.length > 1) b._progress.value = Math.max(0, Math.min(1, arguments[1]));
 }
 function ask(title, text, buttons){
   return new Promise(res => {
@@ -54,7 +60,7 @@ async function installApp(a, mode){
   }
   const uid = a.inst ? a.inst.id : instUid(a.id), stage = 'tmp-' + uid + '/', db = await openDB(), have = new Map(), staged = [], queue = a.files.slice(); let n = 0;
   try {
-    busy(`Lade ${a.name} …`);
+    busy(`Lade ${a.name} …`, 0);
     const st = db.transaction('files').objectStore('files'), ks = await rq(st.getAllKeys(range('tmp-' + uid))), vs = await rq(st.getAll(range('tmp-' + uid)));
     ks.forEach((k, i) => have.set(k.slice(stage.length), vs[i])); /* unterbrochene Downloads fortsetzen */
     const worker = async () => {
@@ -67,7 +73,7 @@ async function installApp(a, mode){
           rec = { type: mimeOf(f.rel), blob: new Blob([buf]), sha };
           const tx = db.transaction('files', 'readwrite'); tx.objectStore('files').put(rec, stage + f.rel); await done(tx);
         }
-        staged.push({ p: f.rel, ...rec }); busy(`Lade ${a.name} … ${++n}/${a.files.length}`);
+        staged.push({ p: f.rel, ...rec }); busy(`Lade ${a.name} … ${++n}/${a.files.length}`, n / a.files.length);
       }
     };
     await Promise.all([worker(), worker(), worker()]);

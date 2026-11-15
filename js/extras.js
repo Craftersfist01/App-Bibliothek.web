@@ -64,16 +64,33 @@ async function clearTemp(){
   } catch (e){ toast('Fehlgeschlagen: ' + e.message); }
 }
 
-/* Nutzungsverlauf */
-function logOpen(a){ const h = LS.get('al.hist', []); h.unshift({ id: a.id, n: a.name, t: Date.now() }); LS.set('al.hist', h.slice(0, 100)); }
+/* Lokale Nutzungsstatistik: nur Zähler, keine Suchtexte oder Gerätekennungen */
+function logOpen(a){
+  const h = LS.get('al.hist', []); h.unshift({ id: a.id, n: a.name, t: Date.now() }); LS.set('al.hist', h.slice(0, 100));
+  const u = LS.get('al.usage', { apps: {}, categories: {} }), category = String(a.category || 'Weitere Apps').trim() || 'Weitere Apps';
+  u.apps[a.id] = (u.apps[a.id] || 0) + 1; u.categories[category] = (u.categories[category] || 0) + 1; LS.set('al.usage', u);
+}
 function renderHistory(p){
   const h = LS.get('al.hist', []); if (!h.length) p.appendChild(el('div', 'chk', 'Noch keine Einträge.'));
   h.slice(0, 15).forEach(x => p.appendChild(el('div', 'chk', new Date(x.t).toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' }) + ' · ' + x.n)));
   const b = el('button', 'btn gh', 'Verlauf löschen'); b.style.marginTop = '10px'; b.onclick = () => { LS.del('al.hist'); render(); }; p.appendChild(b);
+  const note = el('div', 'chk', 'Nutzungsstatistik: nur auf diesem Gerät gespeichert, ohne Suchtexte oder Übertragung.'); note.style.marginTop = '14px'; p.appendChild(note);
+  const clear = el('button', 'btn gh', 'Nutzungsstatistik löschen'); clear.style.marginTop = '10px'; clear.onclick = () => { LS.del('al.usage'); render(); }; p.appendChild(clear);
+}
+function exportCommunityData(){
+  const u = LS.get('al.usage', { apps: {}, categories: {} });
+  download('app-bibliothek-community-statistik.json', JSON.stringify({
+    format: 1,
+    generated: new Date().toISOString(),
+    scope: 'local-aggregate',
+    apps: u.apps || {},
+    categories: u.categories || {}
+  }, null, 2));
+  toast('Aggregierte Community-Daten exportiert.');
 }
 
 /* Sicherung / Geräteübertragung */
-const BK = ['al.settings', 'al.favs', 'al.recents', 'al.hist'];
+const BK = ['al.settings', 'al.favs', 'al.recents', 'al.hist', 'al.usage'];
 function exportBackup(){ download('app-bibliothek-sicherung.json', JSON.stringify({ format: 1, exported: new Date().toISOString(), data: Object.fromEntries(BK.map(k => [k, LS.get(k, null)])) })); }
 function importBackup(){
   const i = el('input'); i.type = 'file'; i.accept = '.json,application/json';
