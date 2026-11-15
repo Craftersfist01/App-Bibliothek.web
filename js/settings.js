@@ -50,6 +50,13 @@ function renderSettings(root){
   row(pa, 'Strenge Berechtigungen', 'Apps ohne Angabe in app.json erhalten keinen Zugriff auf Kamera, Mikrofon, Standort und Zwischenablage', sw(!!S.strictPerms, v => { S.strictPerms = v; save(); }));
   row(pa, 'Automatisch nach Updates suchen', 'Alle 15 Minuten, solange die Bibliothek offen ist', sw(S.autoCheck !== false, v => { S.autoCheck = v; save(); }));
   row(pa, 'Hinweise', 'Einführungs-Tipps erneut anzeigen', btn('Zurücksetzen', () => { S.tips = {}; save(); toast('Hinweise zurückgesetzt.'); }, 1));
+  const pc = P('Community-Verbesserung', inner);
+  row(pc, 'Anonymisierte Statistik erlauben', 'Standardmäßig aus. Es werden nur zusammengefasste App- und Kategorie-Zähler vorbereitet, niemals Suchtexte, IPs oder Geräte-IDs.', sw(!!S.communityOptIn, v => { S.communityOptIn = v; save(); render(); }));
+  row(pc, 'Status', S.communityOptIn ? 'Einwilligung erteilt · automatische Übertragung ist noch nicht eingerichtet' : 'Deaktiviert · es wird nichts für eine Community geteilt', el('span'));
+  row(pc, 'Datenpaket', 'Nur manuell exportieren; vor einer späteren Übertragung prüfen.', btn('Aggregat exportieren', () => {
+    if (!S.communityOptIn) return toast('Bitte zuerst die Einwilligung aktivieren.');
+    exportCommunityData();
+  }, 1));
   renderFolders(P('Ordner', inner)); renderStorage(P('Speicher', inner)); renderHistory(P('Nutzungsverlauf', inner));
   const pb = P('Sicherung & Übertragung', inner);
   row(pb, 'Einstellungen exportieren', 'Quellen, Favoriten, Ordner und Verlauf als Datei', btn('Export', exportBackup, 1));

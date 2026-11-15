@@ -77,6 +77,17 @@ function renderHistory(p){
   const note = el('div', 'chk', 'Nutzungsstatistik: nur auf diesem Gerät gespeichert, ohne Suchtexte oder Übertragung.'); note.style.marginTop = '14px'; p.appendChild(note);
   const clear = el('button', 'btn gh', 'Nutzungsstatistik löschen'); clear.style.marginTop = '10px'; clear.onclick = () => { LS.del('al.usage'); render(); }; p.appendChild(clear);
 }
+function exportCommunityData(){
+  const u = LS.get('al.usage', { apps: {}, categories: {} });
+  download('app-bibliothek-community-statistik.json', JSON.stringify({
+    format: 1,
+    generated: new Date().toISOString(),
+    scope: 'local-aggregate',
+    apps: u.apps || {},
+    categories: u.categories || {}
+  }, null, 2));
+  toast('Aggregierte Community-Daten exportiert.');
+}
 
 /* Sicherung / Geräteübertragung */
 const BK = ['al.settings', 'al.favs', 'al.recents', 'al.hist', 'al.usage'];
