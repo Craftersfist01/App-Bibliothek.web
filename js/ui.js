@@ -99,6 +99,7 @@ function categoryName(a){
   return tag ? String(tag).trim() : 'Weitere Apps';
 }
 function categorySections(list){
+  const usage = LS.get('al.usage', { apps: {}, categories: {} });
   const groups = new Map();
   list.forEach(a => {
     const name = categoryName(a), key = name.toLocaleLowerCase('de');
@@ -106,8 +107,12 @@ function categorySections(list){
     group.apps.push(a); groups.set(key, group);
   });
   return [...groups.values()]
-    .sort((a, b) => b.apps.length - a.apps.length || a.name.localeCompare(b.name, 'de'))
+    .sort((a, b) => (usage.categories[b.name] || 0) - (usage.categories[a.name] || 0) || b.apps.length - a.apps.length || a.name.localeCompare(b.name, 'de'))
     .slice(0, 6);
+}
+function popularApps(list){
+  const counts = LS.get('al.usage', { apps: {} }).apps || {};
+  return list.filter(a => counts[a.id]).sort((a, b) => counts[b.id] - counts[a.id] || a.name.localeCompare(b.name, 'de')).slice(0, 6);
 }
 function resetSearch(){
   query = ''; typeF = 'all'; sort = 'name'; $('#q').value = ''; render(); $('#q').focus();
@@ -144,6 +149,7 @@ function renderInner(){
     if (!l.length) return root.appendChild(msg('Keine Treffer', 'Passe Suche oder Filter an.', 'Suche zurücksetzen', resetSearch));
     if (!query.trim() && typeF === 'all' && sort !== 'manual'){
       const h = highlights(l); if (h.length){ const s = el('section'), row = el('div', 'row'); h.forEach(([a, k], i) => row.appendChild(feat(a, k, i))); s.appendChild(row); root.appendChild(s); }
+      const popular = popularApps(l); if (popular.length) root.appendChild(section('Häufig genutzt', popular, 'Noch keine Nutzungsdaten vorhanden.'));
       categorySections(l).forEach(g => root.appendChild(section(g.name, g.apps.slice(0, 6), 'In dieser Kategorie gibt es noch keine Apps.')));
     }
     const s = el('section'), h2 = el('h2', null, query.trim() ? 'Suchergebnisse' : 'Alle Apps & Games'), g = el('div', 'grid'); h2.appendChild(el('small', null, String(l.length)));
