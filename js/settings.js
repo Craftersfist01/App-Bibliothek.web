@@ -11,14 +11,18 @@ function renderSettings(root){
   const row = (p, label, sub, ctrl) => { const f = el('div', 'f'), l = el('div'); l.appendChild(el('b', null, label)); if (sub) l.appendChild(el('small', sub.bad ? 'bad' : '', sub.t || sub)); f.append(l, ctrl); p.appendChild(f); };
   const sw = (on, fn) => { const i = el('input', 'sw'); i.type = 'checkbox'; i.checked = on; i.onchange = () => fn(i.checked); return i; };
   const btn = (t, fn, g) => { const b = el('button', 'btn' + (g ? ' gh' : ''), t); b.onclick = fn; return b; };
+  const retry = s => btn('Erneut versuchen', () => { s.err = ''; save(); loadAll(true); }, 1);
   /* 1. Darstellung */
   row(P('Darstellung'), 'Farbschema', '', seg([['auto', 'Auto'], ['light', 'Hell'], ['dark', 'Dunkel']], S.theme, k => { S.theme = k; save(); applyTheme(); }));
   /* 2. Quellen */
   const ps = P('Meine Quellen');
   S.sources.forEach(s => {
-    const st = s.err ? { t: s.err, bad: 1 } : s.sync ? 'Synchronisiert ' + new Date(s.sync).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) : (s.type === 'url' ? s.url : 'Noch nicht synchronisiert');
+    const st = s.err ? { t: s.err, bad: 1 } : s.sync ? 'Synchronisiert ' + new Date(s.sync).toLocaleString('de-DE', { dateStyle: 'medium', timeStyle: 'short' }) : (s.type === 'url' ? s.url : 'Noch nicht synchronisiert');
     const c = el('div'); c.style.cssText = 'display:flex;gap:8px;align-items:center';
-    c.append(sw(s.enabled, v => { s.enabled = v; save(); loadAll(false); }), btn('✕', () => { if (confirm(`Quelle „${s.name}“ entfernen?`)){ S.sources = S.sources.filter(x => x !== s); save(); loadAll(false); } }, 1));
+    const toggle = sw(s.enabled, v => { s.enabled = v; save(); loadAll(false); }); toggle.setAttribute('aria-label', `${s.name} aktivieren`); c.append(toggle);
+    if (s.err) c.append(retry(s));
+    const remove = btn('✕', () => { if (confirm(`Quelle „${s.name}“ entfernen?`)){ S.sources = S.sources.filter(x => x !== s); save(); loadAll(false); } }, 1);
+    remove.setAttribute('aria-label', `${s.name} entfernen`); c.append(remove);
     row(ps, s.name + (s.type !== 'url' ? ' · ' + s.owner + '/' + s.repo : ''), st, c);
   });
   const addd = el('details', 'adv'); addd.open = addOpen; addd.appendChild(el('summary', null, 'Quelle hinzufügen'));

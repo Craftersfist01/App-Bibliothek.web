@@ -131,7 +131,13 @@ function renderInner(){
     const sel = el('select'); sel.setAttribute('aria-label', 'Sortierung');
     [['name', 'Name'], ['source', 'Quelle'], ['recent', 'Zuletzt genutzt'], ['manual', 'Manuell']].forEach(([k, l]) => { const o = el('option', null, l); o.value = k; o.selected = sort === k; sel.appendChild(o); });
     sel.onchange = () => { sort = sel.value; render(); }; tools.appendChild(sel);
-    S.sources.filter(s => s.enabled && s.err).forEach(s => root.appendChild(el('div', 'banner glass', `⚠ Quelle „${s.name}“: ${s.err}`)));
+    S.sources.filter(s => s.enabled && s.err).forEach(s => {
+      const b = el('div', 'banner glass'), text = el('span', null, `⚠ Quelle „${s.name}“: ${s.err}`);
+      const retry = el('button', 'btn gh', 'Erneut versuchen');
+      retry.onclick = () => { s.err = ''; save(); loadAll(true); };
+      retry.setAttribute('aria-label', `Quelle „${s.name}“ erneut synchronisieren`);
+      b.append(text, retry); root.appendChild(b);
+    });
     if (loading && !apps.length){ const g = el('div', 'grid'); g.style.marginTop = '24px'; for (let i = 0; i < 6; i++) g.appendChild(el('div', 'sk')); root.appendChild(g); return; }
     const l = visible();
     if (!apps.length) return root.appendChild(msg('Noch keine Apps', 'Lege .html-Dateien in „htmls“ oder Ordner mit index.html in „webapps“, oder füge unter Einstellungen eine Quelle hinzu.', 'Aktualisieren', () => loadAll(true)));

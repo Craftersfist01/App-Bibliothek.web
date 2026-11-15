@@ -113,7 +113,8 @@ section h2 small{font-size:12px;font-weight:700;color:var(--t2);background:var(-
 .sk{height:300px;border-radius:30px;background:linear-gradient(100deg,var(--g) 30%,var(--g2) 50%,var(--g) 70%);background-size:300% 100%;animation:sh 1.5s infinite linear}@keyframes sh{to{background-position:200% 0}}
 .msg{margin:30px auto;max-width:500px;text-align:center;padding:30px;border-radius:30px}
 .msg b{display:block;font-size:19px;margin-bottom:6px}.msg p{margin:0 0 14px;color:var(--t2)}.msg.small{padding:16px;margin:0}
-.banner{margin:12px 0 0;padding:10px 16px;border-radius:18px;font-size:13px;color:var(--t2)}
+.banner{margin:12px 0 0;padding:10px 16px;border-radius:18px;font-size:13px;color:var(--t2);display:flex;align-items:center;gap:12px;justify-content:space-between}
+.banner span{min-width:0}.banner .btn{height:34px;padding:0 14px;font-size:12px;flex:none}
 #tabs{position:fixed;z-index:6;left:50%;transform:translateX(-50%);bottom:max(10px,env(safe-area-inset-bottom));width:min(580px,calc(100% - 28px));height:72px;border-radius:36px;display:flex;padding:6px;gap:4px;box-shadow:0 22px 42px rgba(0,0,0,.18)}
 #tabs button{position:relative;z-index:1;flex:1;border:0;background:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:11px;font-weight:700;color:var(--t2)}
 #tabs button svg{width:23px;height:23px;transition:transform .35s ease}
