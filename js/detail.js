@@ -36,7 +36,7 @@ function detail(a){
   ac.append(pinBtn(a), folderBtn(a));
   if (a.local){
     mk('Bearbeiten', () => editLocal(a));
-    mk('Neue Version installieren', async () => { const k = await ask('Neue Version installieren', 'Wähle die neue HTML-Datei oder geteilte ZIP-App aus.', [{ label: 'Geteilte App (ZIP)', value: 'zip', primary: true }, { label: 'HTML-Datei', value: 'html' }, { label: 'Abbrechen', value: null }]); if (k){ closeDetail(); pickImport(k, a); } });
+    mk('Neue Version installieren', async () => { const k = await ask('Neue Version installieren', 'Wähle die neue HTML-Datei oder geteilte .applib-App aus.', [{ label: 'Geteilte App (.applib)', value: 'zip', primary: true }, { label: 'HTML-Datei', value: 'html' }, { label: 'Abbrechen', value: null }]); if (k){ closeDetail(); pickImport(k, a); } });
     mk('Teilen', () => exportLocal(a)); mk('Löschen', () => deleteLocal(a));
   } else {
     const cp = mk('Link kopieren', () => copyLink(a, cp)), qr = el('div'); qr.style.cssText = 'margin:6px 0 14px;padding:14px;border-radius:18px;background:#fff;max-width:260px;display:none';

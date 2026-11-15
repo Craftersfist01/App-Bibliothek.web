@@ -41,7 +41,7 @@ function renderSettings(root){
   /* 3. Eigene Apps */
   const pl = P('Eigene Apps');
   row(pl, 'App installieren', 'HTML-Datei oder ZIP-Webapp aus der Dateien-App', btn('Auswählen', () => pickImport('app')));
-  row(pl, 'Geteilte App installieren', 'ZIP-Datei mit App und library-data', btn('Auswählen', () => pickImport('zip')));
+  row(pl, 'Geteilte App installieren', '.applib-Datei mit App und library-data', btn('Auswählen', () => pickImport('zip')));
   row(pl, 'QR-Code scannen', 'Link einer App aus einer anderen Bibliothek', btn('Scannen', scanQR));
   /* 4. Erweitert */
   const adv = el('details', 'adv glass'), inner = el('div', 'advbody'); adv.appendChild(el('summary', null, 'Erweitert')); adv.appendChild(inner); root.appendChild(adv);

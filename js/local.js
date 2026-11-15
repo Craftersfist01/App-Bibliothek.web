@@ -36,18 +36,18 @@ function needZip(){
 }
 function pickImport(kind, target){
   if (!HTTP || !('serviceWorker' in navigator)) return toast('Lokale Apps benötigen https (z. B. GitHub Pages) und einen Service Worker.');
-  const i = el('input'); i.type = 'file'; i.accept = kind === 'zip' ? '.zip,application/zip' : '.html,.htm,text/html';
-  if (kind === 'app') i.accept = '.zip,.html,.htm,application/zip,text/html';
+  const i = el('input'); i.type = 'file'; i.accept = kind === 'zip' ? '.applib,.zip,application/zip' : '.html,.htm,text/html';
+  if (kind === 'app') i.accept = '.applib,.zip,.html,.htm,application/zip,text/html';
   i.onchange = () => {
     const file = i.files[0]; if (!file) return;
-    const detected = kind === 'app' ? (/\.zip$/i.test(file.name) || file.type === 'application/zip' ? 'zip' : 'html') : kind;
+    const detected = kind === 'app' ? (/\.(applib|zip)$/i.test(file.name) || file.type === 'application/zip' ? 'zip' : 'html') : kind;
     importLocal(file, detected, target).catch(e => toast('Installation fehlgeschlagen: ' + e.message));
   };
   i.click();
 }
 async function installMenu(){
   const choice = await ask('App installieren', 'Wähle aus, was du installieren möchtest.', [
-    { label: 'Geteilte App installieren', value: 'shared', primary: true },
+    { label: 'Geteilte App installieren (.applib)', value: 'shared', primary: true },
     { label: 'App installieren', value: 'app' },
     { label: 'Abbrechen', value: null }
   ]);
@@ -142,7 +142,7 @@ async function exportLocal(a){
     const json = JSON.stringify(localAppJson(rec || a), null, 2);
     z.file(`library-data/${folder}/app.json`, json);
     const blob = await z.generateAsync({ type: 'blob' }), l = el('a');
-    l.href = URL.createObjectURL(blob); l.download = a.name.replace(/[^\w.-]+/g, '_') + '.zip'; document.body.appendChild(l); l.click(); l.remove(); setTimeout(() => URL.revokeObjectURL(l.href), 6e4);
+    l.href = URL.createObjectURL(blob); l.download = a.name.replace(/[^\w.-]+/g, '_') + '.applib'; l.type = 'application/vnd.app-library'; document.body.appendChild(l); l.click(); l.remove(); setTimeout(() => URL.revokeObjectURL(l.href), 6e4);
   } catch (e){ toast('Export fehlgeschlagen: ' + e.message); }
 }
 async function deleteLocal(a){
