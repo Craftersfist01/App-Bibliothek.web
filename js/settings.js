@@ -40,8 +40,8 @@ function renderSettings(root){
   addd.append(sel, nm, a1, a2, go); ps.appendChild(addd);
   /* 3. Eigene Apps */
   const pl = P('Eigene Apps');
-  row(pl, 'HTML-Datei importieren', 'Bleibt nur auf diesem Gerät', btn('Auswählen', () => pickImport('html')));
-  row(pl, 'Webapp (ZIP) importieren', 'ZIP mit index.html und allen Ressourcen', btn('Auswählen', () => pickImport('zip')));
+  row(pl, 'App installieren', 'HTML-Datei oder ZIP-Webapp aus der Dateien-App', btn('Auswählen', () => pickImport('app')));
+  row(pl, 'Geteilte App installieren', 'ZIP-Datei mit App und library-data', btn('Auswählen', () => pickImport('zip')));
   row(pl, 'QR-Code scannen', 'Link einer App aus einer anderen Bibliothek', btn('Scannen', scanQR));
   /* 4. Erweitert */
   const adv = el('details', 'adv glass'), inner = el('div', 'advbody'); adv.appendChild(el('summary', null, 'Erweitert')); adv.appendChild(inner); root.appendChild(adv);

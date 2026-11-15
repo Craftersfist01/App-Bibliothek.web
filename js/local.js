@@ -37,8 +37,22 @@ function needZip(){
 function pickImport(kind, target){
   if (!HTTP || !('serviceWorker' in navigator)) return toast('Lokale Apps benötigen https (z. B. GitHub Pages) und einen Service Worker.');
   const i = el('input'); i.type = 'file'; i.accept = kind === 'zip' ? '.zip,application/zip' : '.html,.htm,text/html';
-  i.onchange = () => { if (i.files[0]) importLocal(i.files[0], kind, target).catch(e => toast('Import fehlgeschlagen: ' + e.message)); };
+  if (kind === 'app') i.accept = '.zip,.html,.htm,application/zip,text/html';
+  i.onchange = () => {
+    const file = i.files[0]; if (!file) return;
+    const detected = kind === 'app' ? (/\.zip$/i.test(file.name) || file.type === 'application/zip' ? 'zip' : 'html') : kind;
+    importLocal(file, detected, target).catch(e => toast('Installation fehlgeschlagen: ' + e.message));
+  };
   i.click();
+}
+async function installMenu(){
+  const choice = await ask('App installieren', 'Wähle aus, was du installieren möchtest.', [
+    { label: 'Geteilte App installieren', value: 'shared', primary: true },
+    { label: 'App installieren', value: 'app' },
+    { label: 'Abbrechen', value: null }
+  ]);
+  if (choice === 'shared') pickImport('zip');
+  if (choice === 'app') pickImport('app');
 }
 async function importLocal(file, kind, target){
   const reg = await navigator.serviceWorker.getRegistration();
