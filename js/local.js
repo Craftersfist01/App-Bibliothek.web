@@ -19,7 +19,7 @@ async function localApps(){
   if (!window.indexedDB) return [];
   const all = await rq((await openDB()).transaction('apps').objectStore('apps').getAll()), dir = new URL('.', location.href), list = all.filter(m => !m.origin);
   INST = Object.fromEntries(all.filter(m => m.origin).map(m => [m.origin, m]));
-  return list.map(m => ({ id: 'local:device:' + m.id, uid: m.id, sid: 'local', cat: 'local', key: 'local:' + m.id, local: true, file: m.name, name: m.name, desc: m.desc || '', type: m.type, hue: hashHue(m.id), tags: m.tags || [], category: m.category, icon: m.icon ? new URL('local/' + m.id + '/_lib/' + m.icon, dir).href : '', previews: (m.previews || []).map(x => new URL('local/' + m.id + '/_lib/' + x, dir).href), pub: (m.added || '').slice(0, 10), size: m.size, url: new URL('local/' + m.id + '/index.html', dir).href }));
+  return list.map(m => ({ id: 'local:device:' + m.id, uid: m.id, sid: 'local', cat: 'local', local: true, file: m.name, name: m.name, desc: m.desc || '', type: m.type, hue: m.hue ?? hashHue(m.id), tags: m.tags || [], category: m.category, icon: m.icon ? new URL('local/' + m.id + '/_lib/' + m.icon, dir).href : '', previews: (m.previews || []).map(x => new URL('local/' + m.id + '/_lib/' + x, dir).href), version: m.version || '', dev: m.dev || '', pub: m.pub || (m.added || '').slice(0, 10), mod: m.mod || '', changelog: m.changelog || [], permissions: m.permissions || [], features: m.features || [], offline: m.offline, key: 'local:' + m.id, size: m.size, url: new URL('local/' + m.id + '/index.html', dir).href }));
 }
 function safePath(p){ /* Schutz vor Pfadmanipulation: kein .., kein absoluter Pfad, keine Laufwerke */
   p = p.replace(/\\/g, '/');
@@ -55,29 +55,78 @@ async function importLocal(file, kind, target){
     for (const [n, p] of paths) put(strip ? p.slice(strip.length) : p, await zip.files[n].async('blob'));
     if (!files.has('index.html')) throw new Error('Die ZIP-Datei enthält keine index.html im Hauptordner.');
   }
+  const bundle = await localBundle(files);
+  files.clear(); bundle.appFiles.forEach((v, k) => files.set(k, v));
+  bundle.libraryFiles.forEach((v, k) => files.set('_lib/' + k, v));
+  const incoming = bundle.meta;
   if (target){ /* neue Version einer lokalen App: optional alte Version archivieren, Icon/Vorschauen bleiben erhalten */
     const c = await ask('Neue Version importieren', `Die vorhandene Version von „${target.name}“ wird ersetzt. Inkompatible Daten könnten verloren gehen. Möchtest du fortfahren?`, [{ label: 'Alte Version sichern und updaten', value: 'arch', primary: true }, { label: 'Updaten', value: 'upd' }, { label: 'Abbrechen', value: null }]);
     if (!c) return;
     const db0 = await openDB(), cur = await rq(db0.transaction('apps').objectStore('apps').get(target.uid)), st = db0.transaction('files').objectStore('files'), lr = IDBKeyRange.bound(target.uid + '/_lib/', target.uid + '/_lib/\uffff');
     const lk = await rq(st.getAllKeys(lr)), lv = await rq(st.getAll(lr)), v = (prompt('Versionsnummer der neuen Version (optional):', cur.version || '') || '').trim();
     const list = [...files].map(([p, f]) => ({ p, type: mimeOf(p), blob: f })).concat(lk.map((k, i) => ({ p: k.slice(target.uid.length + 1), ...lv[i] })));
-    await commit(target.uid, { ...cur, version: v, size: total, count: files.size, updated: new Date().toISOString() }, list, c === 'arch');
+    const next = { ...cur, ...incoming, version: incoming.version || v || cur.version || '', size: total, count: bundle.appFiles.size, updated: new Date().toISOString() };
+    await commit(target.uid, next, list, c === 'arch');
     toast(`„${cur.name}“ aktualisiert.`); return loadAll(false);
   }
-  const name = (prompt('Name der App:', pretty(file.name.replace(/\.(zip|html?)$/i, ''))) || '').trim(); if (!name) return;
-  const type = confirm('Ist das ein Game?\nOK = Game, Abbrechen = App') ? 'game' : 'app';
+  const name = incoming.name || (prompt('Name der App:', pretty(file.name.replace(/\.(zip|html?)$/i, ''))) || '').trim(); if (!name) return;
+  const type = incoming.type || (confirm('Ist das ein Game?\nOK = Game, Abbrechen = App') ? 'game' : 'app');
   const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
   const tx = (await openDB()).transaction(['apps', 'files'], 'readwrite'); /* alles oder nichts */
-  tx.objectStore('apps').put({ id, name, type, desc: '', tags: [], added: new Date().toISOString(), size: total, count: files.size });
+  tx.objectStore('apps').put({ id, name, type, desc: '', tags: [], ...incoming, added: new Date().toISOString(), size: total, count: bundle.appFiles.size });
   for (const [p, f] of files) tx.objectStore('files').put({ type: MIME[p.split('.').pop().toLowerCase()] || 'application/octet-stream', blob: f }, id + '/' + p);
   await done(tx);
   toast(`„${name}“ importiert (${files.size} Dateien).`); await loadAll(false);
 }
+async function localBundle(files){
+  const appFiles = new Map(files), libraryFiles = new Map(), meta = {};
+  const json = [...files].find(([p]) => /^library-data\/[^/]+\/app\.json$/i.test(p));
+  if (!json) return { appFiles, libraryFiles, meta };
+  const folder = json[0].split('/')[1], prefix = `library-data/${folder}/`;
+  try {
+    const raw = JSON.parse(await json[1].text());
+    const rel = value => String(value || '').replace(/^\.?\//, '').replace(new RegExp('^' + prefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'), '');
+    [...files].forEach(([p, blob]) => { if (p.startsWith(prefix)){ libraryFiles.set(p.slice(prefix.length), blob); appFiles.delete(p); } });
+    const arr = value => Array.isArray(value) ? value : value ? [value] : [];
+    Object.assign(meta, {
+      name: raw.name || raw.displayName || '',
+      desc: raw.description || '',
+      type: raw.type === 'game' ? 'game' : 'app',
+      category: raw.category || '',
+      tags: arr(raw.tags).map(String),
+      icon: raw.icon ? rel(raw.icon) : '',
+      previews: arr(raw.previews || raw.preview).map(x => rel(typeof x === 'string' ? x : x && x.src)).filter(Boolean),
+      version: raw.version || '',
+      dev: raw.developer || '',
+      pub: raw.published || '',
+      mod: raw.modified || '',
+      changelog: arr(raw.changelog),
+      permissions: arr(raw.permissions).map(String),
+      features: arr(raw.features || raw.supports).map(String),
+      offline: raw.offline,
+      hue: typeof raw.color === 'number' ? raw.color : null
+    });
+  } catch (e){ throw new Error('library-data/app.json ist ungültig: ' + e.message); }
+  return { appFiles, libraryFiles, meta };
+}
+const localSlug = name => String(name || 'app').normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'app';
+const localAppJson = rec => ({
+  name: rec.name, description: rec.desc || '', type: rec.type === 'game' ? 'game' : 'app',
+  category: rec.category || '', tags: rec.tags || [], icon: rec.icon || '', previews: rec.previews || [],
+  version: rec.version || '', developer: rec.dev || '', published: rec.pub || '', modified: rec.mod || '',
+  changelog: rec.changelog || [], permissions: rec.permissions || [], features: rec.features || [],
+  offline: rec.offline !== false, color: typeof rec.hue === 'number' ? rec.hue : undefined
+});
 async function exportLocal(a){
   try {
     await needZip();
-    const st = (await openDB()).transaction('files').objectStore('files'), keys = await rq(st.getAllKeys(range(a.uid))), vals = await rq(st.getAll(range(a.uid))), z = new JSZip();
-    keys.forEach((k, i) => z.file(k.slice(a.uid.length + 1), vals[i].blob));
+    const db = await openDB(), rec = await rq(db.transaction('apps').objectStore('apps').get(a.uid)), st = db.transaction('files').objectStore('files'), keys = await rq(st.getAllKeys(range(a.uid))), vals = await rq(st.getAll(range(a.uid))), z = new JSZip(), folder = localSlug(rec && rec.name || a.name);
+    keys.forEach((k, i) => {
+      const rel = k.slice(a.uid.length + 1);
+      z.file(rel.startsWith('_lib/') ? `library-data/${folder}/${rel.slice(5)}` : rel, vals[i].blob);
+    });
+    const json = JSON.stringify(localAppJson(rec || a), null, 2);
+    z.file(`library-data/${folder}/app.json`, json);
     const blob = await z.generateAsync({ type: 'blob' }), l = el('a');
     l.href = URL.createObjectURL(blob); l.download = a.name.replace(/[^\w.-]+/g, '_') + '.zip'; document.body.appendChild(l); l.click(); l.remove(); setTimeout(() => URL.revokeObjectURL(l.href), 6e4);
   } catch (e){ toast('Export fehlgeschlagen: ' + e.message); }
