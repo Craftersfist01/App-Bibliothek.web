@@ -41,7 +41,7 @@ function pickImport(kind, target){
   i.onchange = () => {
     const file = i.files[0]; if (!file) return;
     const detected = kind === 'app' ? (/\.(applib|zip)$/i.test(file.name) || file.type === 'application/zip' ? 'zip' : 'html') : kind;
-    importLocal(file, detected, target).catch(e => toast('Installation fehlgeschlagen: ' + e.message));
+    importLocal(file, detected, target).catch(e => toast(detected === 'zip' ? 'Geteilte App konnte nicht installiert werden: ' + e.message : 'Installation fehlgeschlagen: ' + e.message));
   };
   i.click();
 }
@@ -74,7 +74,9 @@ async function importLocal(file, kind, target){
   bundle.libraryFiles.forEach((v, k) => files.set('_lib/' + k, v));
   const incoming = bundle.meta;
   if (target){ /* neue Version einer lokalen App: optional alte Version archivieren, Icon/Vorschauen bleiben erhalten */
-    const c = await ask('Neue Version importieren', `Die vorhandene Version von „${target.name}“ wird ersetzt. Inkompatible Daten könnten verloren gehen. Möchtest du fortfahren?`, [{ label: 'Alte Version sichern und updaten', value: 'arch', primary: true }, { label: 'Updaten', value: 'upd' }, { label: 'Abbrechen', value: null }]);
+    const change = incoming.changelog && incoming.changelog.length ? '\n\nÄnderungen:\n' + incoming.changelog.slice(0, 4).map(x => typeof x === 'string' ? '• ' + x : '• ' + [x.version, x.text || x.notes].filter(Boolean).join(': ')).join('\n') : '';
+    const version = incoming.version ? `Version ${incoming.version}` : 'Version ohne Angabe';
+    const c = await ask('Neue Version installieren', `„${target.name}“ wird durch ${version} ersetzt.${change}\n\nInkompatible Daten könnten verloren gehen.`, [{ label: 'Alte Version sichern', value: 'arch', primary: true }, { label: 'Installieren', value: 'upd' }, { label: 'Abbrechen', value: null }]);
     if (!c) return;
     const db0 = await openDB(), cur = await rq(db0.transaction('apps').objectStore('apps').get(target.uid)), st = db0.transaction('files').objectStore('files'), lr = IDBKeyRange.bound(target.uid + '/_lib/', target.uid + '/_lib/\uffff');
     const lk = await rq(st.getAllKeys(lr)), lv = await rq(st.getAll(lr)), v = (prompt('Versionsnummer der neuen Version (optional):', cur.version || '') || '').trim();
@@ -82,6 +84,12 @@ async function importLocal(file, kind, target){
     const next = { ...cur, ...incoming, version: incoming.version || v || cur.version || '', size: total, count: bundle.appFiles.size, updated: new Date().toISOString() };
     await commit(target.uid, next, list, c === 'arch');
     toast(`„${cur.name}“ aktualisiert.`); return loadAll(false);
+  }
+  if (incoming.name){
+    const version = incoming.version ? `Version ${incoming.version}` : 'Version ohne Angabe';
+    const change = incoming.changelog && incoming.changelog.length ? '\n\nÄnderungen:\n' + incoming.changelog.slice(0, 4).map(x => typeof x === 'string' ? '• ' + x : '• ' + [x.version, x.text || x.notes].filter(Boolean).join(': ')).join('\n') : '';
+    const ok = await ask('Geteilte App installieren', `${incoming.name}\n${version}${incoming.dev ? `\nEntwickler: ${incoming.dev}` : ''}${change}`, [{ label: 'Installieren', value: true, primary: true }, { label: 'Abbrechen', value: false }]);
+    if (!ok) return;
   }
   const name = incoming.name || (prompt('Name der App:', pretty(file.name.replace(/\.(zip|html?)$/i, ''))) || '').trim(); if (!name) return;
   const type = incoming.type || (confirm('Ist das ein Game?\nOK = Game, Abbrechen = App') ? 'game' : 'app');
@@ -141,8 +149,12 @@ async function exportLocal(a){
     });
     const json = JSON.stringify(localAppJson(rec || a), null, 2);
     z.file(`library-data/${folder}/app.json`, json);
-    const blob = await z.generateAsync({ type: 'blob' }), l = el('a');
-    l.href = URL.createObjectURL(blob); l.download = a.name.replace(/[^\w.-]+/g, '_') + '.applib'; l.type = 'application/vnd.app-library'; document.body.appendChild(l); l.click(); l.remove(); setTimeout(() => URL.revokeObjectURL(l.href), 6e4);
+    const name = a.name.replace(/[^\w.-]+/g, '_') + '.applib', blob = await z.generateAsync({ type: 'blob' }), file = new File([blob], name, { type: 'application/vnd.app-library' });
+    if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })){
+      try { await navigator.share({ title: a.name, text: 'Bibliotheks-App teilen', files: [file] }); toast('App geteilt.'); return; }
+      catch (e){ if (e.name === 'AbortError') return; }
+    }
+    const l = el('a'); l.href = URL.createObjectURL(blob); l.download = name; document.body.appendChild(l); l.click(); l.remove(); setTimeout(() => URL.revokeObjectURL(l.href), 6e4);
   } catch (e){ toast('Export fehlgeschlagen: ' + e.message); }
 }
 async function deleteLocal(a){
