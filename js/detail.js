@@ -36,12 +36,12 @@ function detail(a){
   ac.append(pinBtn(a), folderBtn(a));
   if (a.local){
     mk('Bearbeiten', () => editLocal(a));
-    mk('Neue Version importieren', async () => { const k = await ask('Neue Version importieren', 'Welches Format hat die neue Version?', [{ label: 'ZIP-Webapp', value: 'zip', primary: true }, { label: 'HTML-Datei', value: 'html' }, { label: 'Abbrechen', value: null }]); if (k){ closeDetail(); pickImport(k, a); } });
-    mk('Als ZIP exportieren', () => exportLocal(a)); mk('Löschen', () => deleteLocal(a));
+    mk('Neue Version installieren', async () => { const k = await ask('Neue Version installieren', 'Wähle die neue HTML-Datei oder geteilte .applib-App aus.', [{ label: 'Geteilte App (.applib)', value: 'zip', primary: true }, { label: 'HTML-Datei', value: 'html' }, { label: 'Abbrechen', value: null }]); if (k){ closeDetail(); pickImport(k, a); } });
+    mk('Teilen', () => exportLocal(a)); mk('Löschen', () => deleteLocal(a));
   } else {
     const cp = mk('Link kopieren', () => copyLink(a, cp)), qr = el('div'); qr.style.cssText = 'margin:6px 0 14px;padding:14px;border-radius:18px;background:#fff;max-width:260px;display:none';
     mk('QR-Code', () => { if (!qr.innerHTML){ try { qr.innerHTML = qrSvg(shareLink(a)); } catch (e){ return toast('QR-Code nicht möglich: ' + e.message); } } qr.style.display = qr.style.display === 'none' ? 'block' : 'none'; });
-    if (a.inst){ mk('Als ZIP exportieren', () => exportLocal({ uid: a.inst.id, name: a.name })); mk('Installation entfernen', () => removeInstall(a)); }
+    if (a.inst){ mk('Teilen', () => exportLocal({ uid: a.inst.id, name: a.name })); mk('Installation entfernen', () => removeInstall(a)); }
     adv.append(ac, qr);
   }
   if (a.local) adv.appendChild(ac);

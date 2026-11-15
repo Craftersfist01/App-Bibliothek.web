@@ -158,9 +158,12 @@ function renderInner(){
   } else if (view === 'mine'){
     const by = new Map(apps.map(a => [a.id, a]));
     if (apps.some(a => a.update)) root.appendChild(updateBar());
+    const localSection = section('Eigene Apps', apps.filter(a => a.local), 'Installiere eine HTML-Datei oder eine geteilte ZIP-App über das Plus.');
+    const add = el('button', 'add-app', '+'); add.type = 'button'; add.title = 'App installieren'; add.setAttribute('aria-label', 'App installieren'); add.onclick = installMenu;
+    localSection.querySelector('h2').append(add);
     root.append(section('Favoriten', favs.map(i => by.get(i)).filter(Boolean), 'Tippe auf das Herz einer App, um sie hier zu speichern.'),
       section('Zuletzt geöffnet', recents.map(i => by.get(i)).filter(Boolean), 'Hier erscheinen deine zuletzt geöffneten Apps.'),
-      section('Lokale Apps', apps.filter(a => a.local), 'Importiere HTML-Dateien oder ZIP-Webapps unter Einstellungen → Eigene Apps.'),
+      localSection,
       ...folders().map(f => section('📁 ' + f.name, f.apps.map(i => by.get(i)).filter(Boolean), 'Dieser Ordner ist leer.')));
   } else if (view === 'archive'){ renderArchive(root); }
   else renderSettings(root);
