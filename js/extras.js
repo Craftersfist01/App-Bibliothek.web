@@ -131,7 +131,11 @@ function editLocal(a){
   const file = (l, multi, acc) => { const w = el('label', 'ds', l + ': '), i = el('input'); i.type = 'file'; i.accept = acc; i.multiple = !!multi; w.appendChild(i); w.style.cssText = 'display:block;margin:8px 0'; p.appendChild(w); return i; };
   p.appendChild(el('h3', null, 'Details bearbeiten'));
   const nm = fld('Name', a.name), ds = fld('Beschreibung', a.desc, 1), ct = fld('Kategorie', a.category), tg = fld('Tags (durch Komma getrennt)', (a.tags || []).join(', '));
+  const ver = fld('Version', a.version), dev = fld('Entwickler', a.dev), pub = fld('Veröffentlicht (YYYY-MM-DD)', a.pub), log = fld('Changelog (eine Zeile pro Eintrag)', (a.changelog || []).map(x => typeof x === 'string' ? x : [x.version, x.text || x.notes].filter(Boolean).join(': ')).join('\n'), 1);
   const ty = el('select'); [['app', 'App'], ['game', 'Game']].forEach(([k, l]) => { const x = el('option', null, l); x.value = k; x.selected = a.type === k; ty.appendChild(x); }); ty.style.margin = '6px 0'; p.appendChild(ty);
+  const perm = fld('Berechtigungen (camera, microphone, geolocation, clipboard)', (a.permissions || []).join(', '));
+  const feat = fld('Funktionen (indexeddb, webgl, webaudio)', (a.features || []).join(', '));
+  const off = el('label', 'ds'); off.textContent = 'Offline-fähig '; const offBox = el('input'); offBox.type = 'checkbox'; offBox.checked = a.offline !== false; off.appendChild(offBox); p.appendChild(off);
   const ic = file('Icon (optional)', 0, 'image/*'), pv = file('Vorschauen, Bilder/GIFs/Videos (ersetzen vorhandene)', 1, 'image/*,video/*');
   const row = el('div', 'dbtns'), ok = el('button', 'btn', 'Speichern'), cl = el('button', 'btn gh', 'Abbrechen'); row.append(ok, cl); p.appendChild(row); document.body.appendChild(o);
   cl.onclick = () => o.remove();
@@ -139,7 +143,7 @@ function editLocal(a){
     try {
       const db = await openDB(), cur = await rq(db.transaction('apps').objectStore('apps').get(a.uid)), tx = db.transaction(['apps', 'files'], 'readwrite'), fs = tx.objectStore('files');
       const ext = f => (f.name.split('.').pop() || 'bin').toLowerCase().replace(/[^a-z0-9]/g, '') || 'bin', put = (n, f) => fs.put({ type: f.type || mimeOf(n), blob: f }, a.uid + '/_lib/' + n);
-      Object.assign(cur, { name: nm.value.trim() || cur.name, desc: ds.value.trim(), category: ct.value.trim(), type: ty.value, tags: tg.value.split(',').map(x => x.trim()).filter(Boolean) });
+      Object.assign(cur, { name: nm.value.trim() || cur.name, desc: ds.value.trim(), category: ct.value.trim(), type: ty.value, tags: tg.value.split(',').map(x => x.trim()).filter(Boolean), version: ver.value.trim(), dev: dev.value.trim(), pub: pub.value.trim(), mod: new Date().toISOString(), changelog: log.value.split('\n').map(x => x.trim()).filter(Boolean), permissions: perm.value.split(',').map(x => x.trim()).filter(Boolean), features: feat.value.split(',').map(x => x.trim()).filter(Boolean), offline: offBox.checked });
       if (ic.files[0]){ if (cur.icon) fs.delete(a.uid + '/_lib/' + cur.icon); cur.icon = 'icon.' + ext(ic.files[0]); put(cur.icon, ic.files[0]); }
       if (pv.files.length){ (cur.previews || []).forEach(n => fs.delete(a.uid + '/_lib/' + n)); cur.previews = [...pv.files].map((f, i) => 'p' + i + '.' + ext(f)); [...pv.files].forEach((f, i) => put(cur.previews[i], f)); }
       tx.objectStore('apps').put(cur); await done(tx); o.remove(); closeDetail(); await loadAll(false); toast('Gespeichert.');

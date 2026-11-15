@@ -46,6 +46,7 @@ function card(a, i){
   const c = el('article', 'card glass'); c.style.setProperty('--h', a.hue); c.tabIndex = 0; c.dataset.id = a.id; c.setAttribute('role', 'group'); c.setAttribute('aria-label', [a.name, a.category, a.inst || a.local ? 'offline verfügbar' : '', 'Details'].filter(Boolean).join(' – '));
   const pv = el('div', 'pv'), src = cover(a); pv.appendChild(src ? media(src, a) : iconEl(a, 'xl'));
   const pi = iconEl(a); pi.classList.add('pi'); pv.appendChild(pi);
+  if (a.local){ const edit = el('button', 'edit-local', '✎'); edit.setAttribute('aria-label', `${a.name} bearbeiten`); edit.title = 'App bearbeiten'; edit.onclick = e => { e.stopPropagation(); editLocal(a); }; pv.appendChild(edit); }
   if (a.update) pv.appendChild(el('span', 'badge', 'Update'));
   else if (a.inst || a.local) pv.appendChild(el('span', 'badge offline-badge', 'Offline'));
   if (a.dups && a.dups.length) pv.appendChild(el('span', 'badge duplicate-badge', 'Mehrfach vorhanden'));
