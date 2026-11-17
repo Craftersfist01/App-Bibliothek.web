@@ -1,4 +1,3 @@
-@property --sy{syntax:'<number>';inherits:true;initial-value:0}
 :root{
   --app-vh: 100vh;
   --bg:#0b0d18;--bg2:#161a2f;--bg3:#211d42;--tx:#f3f5ff;--t2:rgba(243,245,255,.7);--t3:rgba(243,245,255,.48);
@@ -19,6 +18,10 @@ html{height:var(--app-vh)}
 body{background:radial-gradient(circle at top left,rgba(106,125,255,.26),transparent 28%),radial-gradient(circle at bottom right,rgba(255,122,217,.18),transparent 32%),var(--bg);min-height:var(--app-vh)}
 .glass{position:relative;background:var(--g);border:1px solid var(--bd);-webkit-backdrop-filter:blur(24px) saturate(170%);backdrop-filter:blur(24px) saturate(170%);box-shadow:inset 0 1px 0 var(--hi),var(--sh)}
 .scrolling .glass{ -webkit-backdrop-filter:none; backdrop-filter:none}
+.scrolling #hd,.scrolling .card,.scrolling .feat{transition:none!important}
+.scrolling .card,.scrolling .card:hover,.scrolling .feat,.scrolling .feat:hover{transform:none!important}
+.scrolling .card::before{opacity:0;transition:none}
+.scrolling .kb,.scrolling .pi,.scrolling .sk{animation-play-state:paused!important}
 #bg{position:fixed;inset:-6%;z-index:0;overflow:hidden;background:radial-gradient(90% 70% at 15% 0%,var(--bg2),var(--bg));transform:translate3d(calc(var(--px,0)*-12px),calc(var(--py,0)*-12px),0);will-change:transform;contain:strict}
 .scrolling #bg i{animation-play-state:paused}
 #bg i{position:absolute;width:58vmax;height:58vmax;border-radius:50%;filter:blur(90px);opacity:.45;will-change:transform;animation:f1 34s ease-in-out infinite alternate}
